@@ -9,13 +9,41 @@ const double TDC2ns = 1E9/FREQ;
 const int NSIPM{8};
 const int NSIDE{2};
 const int NsidesNch{16};
+const int TOFPETperBOARD{8};
+const int SCIFIMINHITS{2};
+const int MUMINHITS{2};
 
-void definePlots( std::map<std::string, TH1*> &m_plots, std::vector<std::string> &tags) {
+namespace TB{
+  const int SCIFISTATION{4};  
+  const int MUSTATION{5};
+  const int NWALLS{3};
+  const int SCIFITHRESHOLD{56};
+}
+
+namespace TI18{
+  const int SCIFISTATION{5};
+  const int MUSTATION{8};
+  const int NWALLS{5};
+  const int SCIFITHRESHOLD{40};
+}
+
+void definePlots( std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
   m_plots["histo"] = new TH2F("histo", "; # scifi hits; # mu hits", 100, 0, 100, 100, 0, 100);
 
   //events characteristics plots
-  m_plots["EventTimeDistribution"] = new TH1D("EventTimeDistribution", "EventTimeDistribution; time (ns); events", 6E9, 0, 6E9); 
+  //m_plots["EventTimeDistribution"] = new TH1D("EventTimeDistribution", "EventTimeDistribution; time (ns); events", 6E9, 0, 6E9); 
+  m_plots["ShowerStart"] = new TH1D("ShowerStart", "ShowerStart; station; entries", 8, -2, 5);
+  m_plots["ShowerStartProbability"] = new TH1D("ShowerStartProbability", "ShowerStartProbability; station; probability", 6, -.5, 5.5);
 
+  // together x and y
+  for (int st = 0; st < TB::SCIFISTATION; ++st){
+    m_plots[Form("TimeResidualStation_%d", st)] = new TH1D (Form("TimeResidualStation_%d", st), Form("TimeResidualStation_%d;t_x - t_y;entries", st), 200, -100, 100);
+  }
+  // separately x and y 
+  for (int st = 0; st < 2*TB::SCIFISTATION; ++st){
+    m_plots[Form("HitsperStation_%d", st)] = new TH1D (Form("HitsperStation_%d", st), Form("HitsperStation_%d;station;entries", st), 500, 0, 500);
+  }
+ 
   //basic quantities plots for scifi and mu 
   for (auto tag : tags) {
     const auto t{tag.c_str()};
@@ -25,12 +53,31 @@ void definePlots( std::map<std::string, TH1*> &m_plots, std::vector<std::string>
     m_plots[Form("%s_nSIPM", t)] = new TH1F(Form("%s_nSIPM", t), Form("%s_nSIPM; n fired SIPM ?; entries", t), 1000, 0, 1000);
     m_plots[Form("%s_charge", t)] = new TH1F(Form("%s_charge", t), Form("%s_charge; qdc; entries", t), 200, 0, 200);
     m_plots[Form("%s_station", t)] = new TH1F(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
+    m_plots[Form("%s_tofpet", t)] = new TH1F(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 50, 0, 50);
+    
+
+    //2D plots
+    m_plots[Form("%s_channelPerTofpet", t)] = new TH2F(Form("%s_channelPerTofpet", t), Form("%s_channelPerTofpet; #tofpet, #channel", t), 50, 0, 50, 100, 0, 100);
   }
+}
+
+int showerStartWall( std::string dataType, std::array<int, 2*TB::SCIFISTATION> &hits, int hitThr) {
+  //GetTofpetID
+  if (dataType == "TB"){
+    for (int i = 0; i < TB::SCIFISTATION; ++i){
+      //std::cout << hits[i] << "   ||    " << hits[i+4] << std::endl; 
+      if (hits[i] > hitThr && hits[i+4] > hitThr){ 
+        return i;} // the Fe wall number is the same as the ScifiStation in front of it
+    }
+  }
+  return -1;
 }
 
 void runAnalysis() //(int runN, int partN)
 {
-
+  auto start = std::chrono::system_clock::now();
+  auto now = std::chrono::system_clock::to_time_t(start);
+  std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
   gStyle->SetTitleOffset(0.95, "X");
   gStyle->SetTitleOffset(0.95, "Y");
   gStyle->SetTitleSize(0.055, "XY");
@@ -45,19 +92,27 @@ void runAnalysis() //(int runN, int partN)
   gStyle->SetStatH(0.3);   
   gROOT->ForceStyle();
 
-  
+  int runNumber{100637};  
+  // 100639: pion 300 GeV 3 wall file
+  // 100635: pion 180 GeV 3 wall file
+  auto *fEventTree = new TChain("rawConv");
+  for (int i = 0; i<3; ++i){
+    //fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_100653/sndsw_raw-%04d.root", i)); // pion 300GeV 1 wall file
+    fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_%d/sndsw_raw-%04d.root", runNumber, i)); 
+    //fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_100678/sndsw_raw-%04d.root", i)); // muon file
+  }
+  TFile outputFile(Form("outputRun_%d.root", runNumber), "RECREATE"); 
+  outputFile.cd();
+
+  std::map<std::string, double> counters;
   std::map<std::string, TH1*> plots;
   std::vector<std::string> tags;
   tags.push_back("Scifi");
   tags.push_back("MuFilter");
 
-  definePlots(plots, tags);
+  definePlots(plots, counters, tags);
   
-  auto *fEventTree = new TChain("rawConv");
-  TFile outputFile("output.root", "RECREATE"); 
-  outputFile.cd();
 
-  fEventTree->Add("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_100678/sndsw_raw-0000.root");
 
   auto mu_hits = new TClonesArray("MuFilterHit");
   fEventTree->SetBranchAddress("Digi_MuFilterHits", &mu_hits);
@@ -75,30 +130,38 @@ void runAnalysis() //(int runN, int partN)
     int mu_max=mu_hits->GetEntries();
 
     //remove almost empty events
-    if (sf_max < 2 || mu_max < 2) continue;
+    if (sf_max < SCIFIMINHITS || mu_max < MUMINHITS) continue;
 
-    plots["EventTimeDistribution"]->Fill(header->GetEventTime());
+    std::array<int, 2*TB::SCIFISTATION> hitsPerStation = {0};     //1x, 2x, 3x, 4x, 1y, 2y, 3y, 4y
+
+    //plots["EventTimeDistribution"]->Fill(header->GetEventTime());
     plots["histo"]->Fill(sf_max, mu_max);
 
     for (int i=0 ; i<sf_max; i++) {
+
         auto t = tags[0].c_str();
         auto sf_hit = (sndScifiHit*) sf_hits->At(i);
-        
+
+
         int station = sf_hit->GetStation();
         plots[Form("%s_station", t)]->Fill(station);
+        
 
-
-        // for each event->loop over all SIPMs in one side
-        for (int j = 0;  j<NsidesNch; ++j){
-          int channel = sf_hit->Getchannel(j);
-          if (channel > -1) plots[Form("%s_channels", t)]->Fill(channel);
-          float charge = sf_hit->GetSignal(j);
-          if (charge > -1) plots[Form("%s_charge", t)]->Fill(charge);
-          float time = sf_hit->GetTime(j)*TDC2ns;
-          plots[Form("%s_times", t)] ->Fill(time);
+        if (sf_hit->isVertical()) {
+          int bin = 4+(station-1);
+          hitsPerStation[bin] +=1 ;
+          plots[Form("HitsperStation_%d", bin)]->Fill(hitsPerStation[bin]);
+        }
+        else {
+          int bin = station-1;
+          hitsPerStation[bin] +=1;
+          plots[Form("HitsperStation_%d", bin)]->Fill(hitsPerStation[bin]);
         }
 
     }
+    int showerStart= showerStartWall("TB", hitsPerStation, TB::SCIFITHRESHOLD);
+    plots["ShowerStart"]->Fill(showerStart);
+    plots["ShowerStartProbability"]->Fill(showerStart);
 
     for (int i=0 ; i<mu_max; i++) {
         auto t = tags[1].c_str();
@@ -116,33 +179,17 @@ void runAnalysis() //(int runN, int partN)
     }
   }
 
+  auto stop = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = stop-start;
+  auto end = std::chrono::system_clock::to_time_t(stop);
+  std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
 
-  auto *c = new TCanvas("c", "c",  500, 500, 500, 500);
-  c->Divide(2, 2);
-  c->cd(1);
-  plots[Form("Scifi_channels")]->Draw();
-  c->cd(2);
-  plots[Form("MuFilter_channels")]->Draw();
-  c->cd(3);
-  plots[Form("Scifi_charge")]->Draw();
-  c->cd(4);
-  plots[Form("MuFilter_charge")]->Draw();
+  std::cout << "Shower start ratio for station 2 (" << plots["ShowerStart"]->GetBinContent(5) << ") and station 1 (" << plots["ShowerStart"]->GetBinContent(4) 
+            << ") is " << plots["ShowerStart"]->GetBinContent(5)/plots["ShowerStart"]->GetBinContent(4) << std::endl;
 
-  auto *c1 = new TCanvas("c1", "c1", 500, 500, 500, 500);
-  c1->Divide(2, 2);
-  c1->cd(1);
-  plots["Scifi_station"]->Draw();
-  c1->cd(2);
-  plots[Form("MuFilter_station")]->Draw();
-  c1->cd(3);
-  plots[Form("Scifi_times")]->Draw();
-  c1->cd(4);
-  plots[Form("MuFilter_times")]->Draw();
+  std::cout << "Shower start ratio for station 3 (" << plots["ShowerStart"]->GetBinContent(6) << ") and station 2 (" << plots["ShowerStart"]->GetBinContent(5) 
+            << ") is " << plots["ShowerStart"]->GetBinContent(6)/plots["ShowerStart"]->GetBinContent(5) << std::endl;
 
-  auto *c2 = new TCanvas("c2", "c2", 500, 500, 500, 500);
-  plots["EventTimeDistribution"]->Draw();
-  
-  std::cout << "\nDone" << std::endl;
   outputFile.Write();
   outputFile.Close();
 }
