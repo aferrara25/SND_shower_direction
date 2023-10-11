@@ -78,29 +78,19 @@ void runAnalysis() //(int runN, int partN)
   auto start = std::chrono::system_clock::now();
   auto now = std::chrono::system_clock::to_time_t(start);
   std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
-  gStyle->SetTitleOffset(0.95, "X");
-  gStyle->SetTitleOffset(0.95, "Y");
-  gStyle->SetTitleSize(0.055, "XY");
-  gStyle->SetLabelSize(0.05, "XY");
-  gStyle->SetHistLineWidth(2);
-  gStyle->SetStatX(0.9);
-  gStyle->SetStatY(0.9);
-  gStyle->SetPadGridX(1);
-  gStyle->SetPadGridY(1);
-  gStyle->SetNdivisions(510, "XY");
-  gStyle->SetStatW(0.3);
-  gStyle->SetStatH(0.3);   
-  gROOT->ForceStyle();
 
-  int runNumber{100637};  
-  // 100639: pion 300 GeV 3 wall file
-  // 100635: pion 180 GeV 3 wall file
+  // ##################### Read file #####################
+  int runNumber{100633};  
+  // 100633: pion 140 GeV 3 walls file
+  // 100635: pion 180 GeV 3 walls file
+  // 100637: pion 240 GeV 3 walls file
+  // 100639: pion 300 GeV 3 walls file
+
   auto *fEventTree = new TChain("rawConv");
   for (int i = 0; i<3; ++i){
-    //fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_100653/sndsw_raw-%04d.root", i)); // pion 300GeV 1 wall file
     fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_%d/sndsw_raw-%04d.root", runNumber, i)); 
-    //fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_100678/sndsw_raw-%04d.root", i)); // muon file
   }
+
   TFile outputFile(Form("outputRun_%d.root", runNumber), "RECREATE"); 
   outputFile.cd();
 
@@ -110,9 +100,10 @@ void runAnalysis() //(int runN, int partN)
   tags.push_back("Scifi");
   tags.push_back("MuFilter");
 
+
   definePlots(plots, counters, tags);
   
-
+  // ##################### Read hits from Scifi and Mufilter  #####################
 
   auto mu_hits = new TClonesArray("MuFilterHit");
   fEventTree->SetBranchAddress("Digi_MuFilterHits", &mu_hits);
@@ -123,7 +114,7 @@ void runAnalysis() //(int runN, int partN)
   
   // Loop over events
   int iMax = fEventTree->GetEntries();
-  for ( int m =0; m < iMax; m++ ){ // iMax=fEventTree->GetEntries()
+  for ( int m =0; m < iMax; m++ ){ 
     if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
     fEventTree->GetEntry(m);
     int sf_max=sf_hits->GetEntries();
@@ -134,7 +125,6 @@ void runAnalysis() //(int runN, int partN)
 
     std::array<int, 2*TB::SCIFISTATION> hitsPerStation = {0};     //1x, 2x, 3x, 4x, 1y, 2y, 3y, 4y
 
-    //plots["EventTimeDistribution"]->Fill(header->GetEventTime());
     plots["histo"]->Fill(sf_max, mu_max);
 
     for (int i=0 ; i<sf_max; i++) {
@@ -142,7 +132,7 @@ void runAnalysis() //(int runN, int partN)
         auto t = tags[0].c_str();
         auto sf_hit = (sndScifiHit*) sf_hits->At(i);
 
-
+        //plot some basic info
         int station = sf_hit->GetStation();
         plots[Form("%s_station", t)]->Fill(station);
         
@@ -159,6 +149,7 @@ void runAnalysis() //(int runN, int partN)
         }
 
     }
+    //check where the shower starts
     int showerStart= showerStartWall("TB", hitsPerStation, TB::SCIFITHRESHOLD);
     plots["ShowerStart"]->Fill(showerStart);
     plots["ShowerStartProbability"]->Fill(showerStart);
@@ -166,12 +157,16 @@ void runAnalysis() //(int runN, int partN)
     for (int i=0 ; i<mu_max; i++) {
         auto t = tags[1].c_str();
         auto mu_hit = (MuFilterHit*) mu_hits->At(i);
-        for (int j = 0; j<NsidesNch; ++j){
+
+/*        REDO AFTER SIMONA COMMENT
+          for (int j = 0; j<NsidesNch; ++j){
           int channel = mu_hit->Getchannel(j);
           if (channel > -1) plots[Form("%s_channels", t)]->Fill(channel);
           float charge = mu_hit->GetSignal(j);
           if (charge > -1) plots[Form("%s_charge", t)]->Fill(charge);
-        }
+        }*/
+
+        //plot some basic info
         int station = mu_hit->GetPlane();
         plots[Form("%s_station", t)]->Fill(station);
         float time = mu_hit->GetTime()*TDC2ns;
@@ -184,12 +179,14 @@ void runAnalysis() //(int runN, int partN)
   auto end = std::chrono::system_clock::to_time_t(stop);
   std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
 
+  // Write ratio of showering event in different stations
   std::cout << "Shower start ratio for station 2 (" << plots["ShowerStart"]->GetBinContent(5) << ") and station 1 (" << plots["ShowerStart"]->GetBinContent(4) 
             << ") is " << plots["ShowerStart"]->GetBinContent(5)/plots["ShowerStart"]->GetBinContent(4) << std::endl;
 
   std::cout << "Shower start ratio for station 3 (" << plots["ShowerStart"]->GetBinContent(6) << ") and station 2 (" << plots["ShowerStart"]->GetBinContent(5) 
             << ") is " << plots["ShowerStart"]->GetBinContent(6)/plots["ShowerStart"]->GetBinContent(5) << std::endl;
-
+  
+  // ##################### Write results to file #####################
   outputFile.Write();
   outputFile.Close();
 }
