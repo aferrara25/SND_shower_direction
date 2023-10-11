@@ -10,37 +10,59 @@ const int NSIPM{8};
 const int NSIDE{2};
 const int NsidesNch{16};
 const int TOFPETperBOARD{8};
-const int SCIFIMINHITS{2};
-const int MUMINHITS{2};
 
-namespace TB{
-  const int SCIFISTATION{4};  
-  const int MUSTATION{5};
-  const int NWALLS{3};
-  const int SCIFITHRESHOLD{56};
+struct cfg
+{
+  int SCIFISTATION{-1};
+  int MUSTATION{-1};
+  int NWALLS{-1};
+  int SCIFITHRESHOLD{-1};
+  int SCIFIMINHITS{999};
+  int MUMINHITS{999};
+  
+  const char *INFILENAME;
+  const char *OUTFILENAME;
+};
+
+cfg setCfg( bool istb ) {
+  cfg config;
+  if (istb) {
+    config.SCIFISTATION = 4;
+    config.MUSTATION = 5;
+    config.NWALLS = 3;
+    config.SCIFITHRESHOLD = 56;
+    config.SCIFIMINHITS = 2;
+    config.MUMINHITS = 2;
+    config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/";
+    config.OUTFILENAME = "TB_output";
+  }
+  else {
+    config.SCIFISTATION = 5;
+    config.MUSTATION = 8;
+    config.NWALLS = 5;
+    config.SCIFITHRESHOLD = 56;
+    config.SCIFIMINHITS = 2;
+    config.MUMINHITS = 2;
+    config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2023/";
+    config.OUTFILENAME = "TI18_output";
+  }
+  return config;
 }
 
-namespace TI18{
-  const int SCIFISTATION{5};
-  const int MUSTATION{8};
-  const int NWALLS{5};
-  const int SCIFITHRESHOLD{40};
-}
 
-void definePlots( std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
+void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
   m_plots["histo"] = new TH2F("histo", "; # scifi hits; # mu hits", 100, 0, 100, 100, 0, 100);
 
-  //events characteristics plots
-  //m_plots["EventTimeDistribution"] = new TH1D("EventTimeDistribution", "EventTimeDistribution; time (ns); events", 6E9, 0, 6E9); 
+  // events characteristics plots
   m_plots["ShowerStart"] = new TH1D("ShowerStart", "ShowerStart; station; entries", 8, -2, 5);
   m_plots["ShowerStartProbability"] = new TH1D("ShowerStartProbability", "ShowerStartProbability; station; probability", 6, -.5, 5.5);
 
   // together x and y
-  for (int st = 0; st < TB::SCIFISTATION; ++st){
+  for (int st = 0; st < configuration.SCIFISTATION; ++st){
     m_plots[Form("TimeResidualStation_%d", st)] = new TH1D (Form("TimeResidualStation_%d", st), Form("TimeResidualStation_%d;t_x - t_y;entries", st), 200, -100, 100);
   }
   // separately x and y 
-  for (int st = 0; st < 2*TB::SCIFISTATION; ++st){
+  for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
     m_plots[Form("HitsperStation_%d", st)] = new TH1D (Form("HitsperStation_%d", st), Form("HitsperStation_%d;station;entries", st), 500, 0, 500);
   }
  
@@ -61,37 +83,39 @@ void definePlots( std::map<std::string, TH1*> &m_plots, std::map<std::string, do
   }
 }
 
-int showerStartWall( std::string dataType, std::array<int, 2*TB::SCIFISTATION> &hits, int hitThr) {
+int showerStartWall( cfg configuration, std::vector<int> &hits, int hitThr) {
   //GetTofpetID
-  if (dataType == "TB"){
-    for (int i = 0; i < TB::SCIFISTATION; ++i){
-      //std::cout << hits[i] << "   ||    " << hits[i+4] << std::endl; 
-      if (hits[i] > hitThr && hits[i+4] > hitThr){ 
-        return i;} // the Fe wall number is the same as the ScifiStation in front of it
+  //if (istb){
+    for (int i = 0; i < configuration.SCIFISTATION; ++i){ 
+      if (hits[i] > hitThr && hits[i+configuration.SCIFISTATION] > hitThr) return i;   // the Fe wall number is the same as the ScifiStation in front of it
     }
-  }
+  //}
   return -1;
 }
 
-void runAnalysis() //(int runN, int partN)
+void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 {
+
   auto start = std::chrono::system_clock::now();
   auto now = std::chrono::system_clock::to_time_t(start);
   std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
 
+  // ##################### Set right parameters for data type (TB/TI18) #####################
+  cfg configuration = setCfg(isTB);
   // ##################### Read file #####################
-  int runNumber{100633};  
+  //int runNumber{100633};  
   // 100633: pion 140 GeV 3 walls file
   // 100635: pion 180 GeV 3 walls file
   // 100637: pion 240 GeV 3 walls file
   // 100639: pion 300 GeV 3 walls file
 
   auto *fEventTree = new TChain("rawConv");
-  for (int i = 0; i<3; ++i){
-    fEventTree->Add(Form("root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/run_%d/sndsw_raw-%04d.root", runNumber, i)); 
+  //for (int i = 0; i<3; ++i){
+  for (int i = 0; i<nFiles; ++i){
+    fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME, runNumber, i)); 
   }
 
-  TFile outputFile(Form("outputRun_%d.root", runNumber), "RECREATE"); 
+  TFile outputFile(Form("%sRun_%d.root", configuration.OUTFILENAME, runNumber), "RECREATE"); 
   outputFile.cd();
 
   std::map<std::string, double> counters;
@@ -101,7 +125,7 @@ void runAnalysis() //(int runN, int partN)
   tags.push_back("MuFilter");
 
 
-  definePlots(plots, counters, tags);
+  definePlots(configuration, plots, counters, tags);
   
   // ##################### Read hits from Scifi and Mufilter  #####################
 
@@ -121,9 +145,10 @@ void runAnalysis() //(int runN, int partN)
     int mu_max=mu_hits->GetEntries();
 
     //remove almost empty events
-    if (sf_max < SCIFIMINHITS || mu_max < MUMINHITS) continue;
+    if (sf_max < configuration.SCIFIMINHITS || mu_max < configuration.MUMINHITS) continue;
 
-    std::array<int, 2*TB::SCIFISTATION> hitsPerStation = {0};     //1x, 2x, 3x, 4x, 1y, 2y, 3y, 4y
+    std::vector<int> hitsPerStation;     //1x, 2x, 3x, 4x, 1y, 2y, 3y, 4y
+    for (int i = 0; i < 2*configuration.SCIFISTATION; ++i) hitsPerStation.push_back(0);
 
     plots["histo"]->Fill(sf_max, mu_max);
 
@@ -136,9 +161,11 @@ void runAnalysis() //(int runN, int partN)
         int station = sf_hit->GetStation();
         plots[Form("%s_station", t)]->Fill(station);
         
+        double time = sf_hit->GetTime(0)*TDC2ns;
+        plots[Form("%s_times", t)]->Fill(time);
 
         if (sf_hit->isVertical()) {
-          int bin = 4+(station-1);
+          int bin = configuration.SCIFISTATION+(station-1);
           hitsPerStation[bin] +=1 ;
           plots[Form("HitsperStation_%d", bin)]->Fill(hitsPerStation[bin]);
         }
@@ -146,11 +173,25 @@ void runAnalysis() //(int runN, int partN)
           int bin = station-1;
           hitsPerStation[bin] +=1;
           plots[Form("HitsperStation_%d", bin)]->Fill(hitsPerStation[bin]);
+
+          //study residual to match vertical and horizontal hits
+          /*  for (int j=0; j<sf_max; ++j){
+              if (i==j) continue;
+              auto other_sf_hit = (sndScifiHit*) sf_hits->At(j);
+              if ( other_sf_hit->GetStation() != station) continue; //select same station
+              if ( !other_sf_hit->isVertical() ) continue;          //select vertical hits
+              double y_time = other_sf_hit->GetTime(0)*TDC2ns;
+              double res = time - y_time;
+              plots[Form("TimeResidualStation_%d", station-1)]->Fill(res);
+            }*/
         }
+
+
+          
 
     }
     //check where the shower starts
-    int showerStart= showerStartWall("TB", hitsPerStation, TB::SCIFITHRESHOLD);
+    int showerStart= showerStartWall(configuration, hitsPerStation, configuration.SCIFITHRESHOLD);
     plots["ShowerStart"]->Fill(showerStart);
     plots["ShowerStartProbability"]->Fill(showerStart);
 
