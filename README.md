@@ -4,7 +4,8 @@
 In sndsw environment, open ROOT, run the analysis with:
 
 ```
-.L ConvertedDataAnalyser.CD
+.L Scifihits.cpp
+.L ConvertedDataAnalyser.cpp    
 runAnalysis( run_number, number_files_to_read, isTBdata) 
 ```
 e.g. runAnalysis(6663,1,false) to analyse 1 file of run 6663 of TI18 data
