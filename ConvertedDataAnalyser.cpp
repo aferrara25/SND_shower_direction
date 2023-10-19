@@ -225,9 +225,11 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
         if (station > 1 && TimeCutHits[0].getXhits() == 1 && TimeCutHits[0].getYhits() == 1  && (st1Ytime-st1Xtime) < configuration.TIMECUT ){    //  && (st1Ytime-st1Xtime) < configuration.TIMECUT
 //          std::cout << "X Y time diff: " << st1Xtime-st1Ytime << std::endl;    ci sono eventi con 0 oppure -6.23768 y da evento precedente?
           double st1time = st1Ytime;
-          if ((time - st1time) < configuration.TIMECUT) TimeCutHits[station-1].addHit(tofpet, channel, vertical);
-          plots[Form("%s_TimeCut_signals_st%d", t, station-1)]->Fill(signal);
-          plots[Form("%s_tofpet_st%d", t, station-1)]->Fill(tofpet);
+          if ((time - st1time) < configuration.TIMECUT) {
+            TimeCutHits[station-1].addHit(tofpet, channel, vertical);
+            plots[Form("%s_TimeCut_signals_st%d", t, station-1)]->Fill(signal);
+            plots[Form("%s_tofpet_st%d", t, station-1)]->Fill(tofpet);
+          }
         } 
         
     }
