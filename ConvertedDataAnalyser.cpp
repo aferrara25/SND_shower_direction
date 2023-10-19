@@ -50,7 +50,7 @@ cfg setCfg( bool istb ) {
     config.TIMECUT = .5;
     config.SCIFIDIM = 13;
     config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/";
-    config.OUTFILENAME = "TB_output";
+    config.OUTFILENAME = "output/TB_output";
   }
   else {
     config.SCIFISTATION = 5;
@@ -61,7 +61,7 @@ cfg setCfg( bool istb ) {
     config.MUMINHITS = 2;
     config.BOARDPERSTATION = 3;
     config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2023/";
-    config.OUTFILENAME = "TI18_output";
+    config.OUTFILENAME = "output/TI18_output";
   }
   return config;
 }
@@ -106,7 +106,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
       m_plots[Form("%s_Xposition_st%d", t, st)] = new TH1D(Form("%s_Xposition_st%d", t, st), Form("%s_Xposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
       m_plots[Form("%s_Yposition_st%d", t, st)] = new TH1D(Form("%s_Yposition_st%d", t, st), Form("%s_Yposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
       m_plots[Form("%s_TimeCut_signals_st%d", t, st)] = new TH1D(Form("%s_TimeCut_signals_st%d", t, st), Form("%s_TimeCut_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
-
+      m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1I(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
     }
   }
 }
@@ -227,6 +227,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
           double st1time = st1Ytime;
           if ((time - st1time) < configuration.TIMECUT) TimeCutHits[station-1].addHit(tofpet, channel, vertical);
           plots[Form("%s_TimeCut_signals_st%d", t, station-1)]->Fill(signal);
+          plots[Form("%s_tofpet_st%d", t, station-1)]->Fill(tofpet);
         } 
         
     }
@@ -308,18 +309,26 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
 
   // Write ratio of showering event in different stations
-  std::cout << "Shower start ratio for station 2 (" << plots["ShowerStart"]->GetBinContent(5) << ") and station 1 (" << plots["ShowerStart"]->GetBinContent(4) 
+  std::cout << "Shower start ratio for station 3 (" << plots["ShowerStart"]->GetBinContent(5) << ") and station 2 (" << plots["ShowerStart"]->GetBinContent(4) 
             << ") is " << plots["ShowerStart"]->GetBinContent(5)/plots["ShowerStart"]->GetBinContent(4) << std::endl;
 
-  std::cout << "Shower start ratio for station 3 (" << plots["ShowerStart"]->GetBinContent(6) << ") and station 2 (" << plots["ShowerStart"]->GetBinContent(5) 
+  std::cout << "Shower start ratio for station 4 (" << plots["ShowerStart"]->GetBinContent(6) << ") and station 3 (" << plots["ShowerStart"]->GetBinContent(5) 
             << ") is " << plots["ShowerStart"]->GetBinContent(6)/plots["ShowerStart"]->GetBinContent(5) << std::endl;
   
   std::cout << "******************************** TIME CUT ********************************" <<std::endl;
-  std::cout << "Shower start ratio for station 2 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) << ") and station 1 (" << plots["TimeCut_ShowerStart"]->GetBinContent(4) 
+  std::cout << "Shower start ratio for station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) << ") and station 2 (" << plots["TimeCut_ShowerStart"]->GetBinContent(4) 
             << ") is " << plots["TimeCut_ShowerStart"]->GetBinContent(5)/plots["TimeCut_ShowerStart"]->GetBinContent(4) << std::endl;
 
-  std::cout << "Shower start ratio for station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(6) << ") and station 2 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) 
+  std::cout << "Shower start ratio for station 4 (" << plots["TimeCut_ShowerStart"]->GetBinContent(6) << ") and station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) 
             << ") is " << plots["TimeCut_ShowerStart"]->GetBinContent(6)/plots["TimeCut_ShowerStart"]->GetBinContent(5) << std::endl;
+
+  for (int bin = 0; bin < 10; ++bin) {
+    auto t = tags[0].c_str();
+    std::cout << "For bin " << bin << std::endl;
+    std::cout << "Stat 2: " <<  plots[Form("%s_tofpet_st%d", t, 1)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 1)]->GetEntries() << std::endl;
+    std::cout << "Stat 3: " <<  plots[Form("%s_tofpet_st%d", t, 2)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 2)]->GetEntries() << std::endl;
+    std::cout << "Stat 4: " <<  plots[Form("%s_tofpet_st%d", t, 3)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 3)]->GetEntries() << std::endl;
+  }
 
   // ##################### Write results to file #####################
   outputFile.Write();
