@@ -27,6 +27,7 @@ void Scifihits::addHit(int tofpet, int channel, bool isVertical) {
 bool Scifihits::checkShower(int thr, int ngaps, int sidecut){
     // if there's no hits there's for sure no shower
     if (std::all_of(yHits.begin(), yHits.end(), [](int i) { return i==0; }) || std::all_of(xHits.begin(), xHits.end(), [](int i) { return i==0; })) return false;
+    //std::cout << " X hits: " << xSize << " Y hits: " << ySize << std::endl;
 
     int xCounter{0};
     int xMax{0};
@@ -86,8 +87,8 @@ bool Scifihits::checkMultipleHits(){
     return false;
 }
 
-int Scifihits::getYhits(){ return ySize; } 
+const int Scifihits::getYhits() const { return ySize; } 
 
-int Scifihits::getXhits(){ return xSize; }
+const int Scifihits::getXhits() const { return xSize; }
 
 

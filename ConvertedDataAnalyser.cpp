@@ -41,13 +41,13 @@ cfg setCfg( bool istb ) {
     config.SCIFISTATION = 4;
     config.MUSTATION = 5;
     config.NWALLS = 3;
-    config.SCIFITHRESHOLD = 56;
-    config.SCIFIMAXGAP = 999;
-    config.SCIFISIDECUT = 0;
+    config.SCIFITHRESHOLD = 35;
+    config.SCIFIMAXGAP = 5;
+    config.SCIFISIDECUT = 90;
     config.SCIFIMINHITS = 10;
-    config.MUMINHITS = 2;
+    config.MUMINHITS = 5;
     config.BOARDPERSTATION = 1;
-    config.TIMECUT = .5;
+    config.TIMECUT = 1;
     config.SCIFIDIM = 13;
     config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/";
     config.OUTFILENAME = "output/TB_output";
@@ -92,21 +92,58 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
  
   //basic quantities plots for scifi and mu 
   for (auto tag : tags) {
-    const auto t{tag.c_str()};
-    m_plots[Form("%s_times", t)] = new TH1D(Form("%s_times", t), Form("%s_times; time (ns) ; entries", t), 150, -5, 145);
-    m_plots[Form("%s_signals", t)] = new TH1D(Form("%s_signals", t), Form("%s_signals; qdc? ; entries", t), 100, -30, 80);
-    m_plots[Form("%s_channels", t)] = new TH1D(Form("%s_channels", t), Form("%s_channels; n channel; entries", t), 100, 0, 100);
-    m_plots[Form("%s_charge", t)] = new TH1D(Form("%s_charge", t), Form("%s_charge; qdc?; entries", t), 200, 0, 200);
-    m_plots[Form("%s_station", t)] = new TH1D(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
-    m_plots[Form("%s_tofpet", t)] = new TH1I(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 10, 0, 10);
-    m_plots[Form("%s_boardID", t)] = new TH1I(Form("%s_boardID", t), Form("%s_boardID; board number; entries", t), 100, 0, 100);
+    
+    //SCIFI plots
+    if (tag == "Scifi"){
+      const auto t{tag.c_str()};
+      m_plots[Form("%s_times", t)] = new TH1D(Form("%s_times", t), Form("%s_times; time (ns) ; entries", t), 150, -5, 145);
+      m_plots[Form("%s_signals", t)] = new TH1D(Form("%s_signals", t), Form("%s_signals; qdc? ; entries", t), 100, -30, 80);
+      m_plots[Form("%s_channels", t)] = new TH1D(Form("%s_channels", t), Form("%s_channels; n channel; entries", t), 100, 0, 100);
+      m_plots[Form("%s_charge", t)] = new TH1D(Form("%s_charge", t), Form("%s_charge; qdc?; entries", t), 200, 0, 200);
+      m_plots[Form("%s_station", t)] = new TH1D(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
+      m_plots[Form("%s_tofpet", t)] = new TH1D(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 10, 0, 10);
+      m_plots[Form("%s_boardID", t)] = new TH1D(Form("%s_boardID", t), Form("%s_boardID; board number; entries", t), 100, 0, 100);
+      
+      for (int st = 0; st < configuration.SCIFISTATION; ++st){
+        m_plots[Form("%s_Xposition_st%d", t, st)] = new TH1D(Form("%s_Xposition_st%d", t, st), Form("%s_Xposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
+        m_plots[Form("%s_Yposition_st%d", t, st)] = new TH1D(Form("%s_Yposition_st%d", t, st), Form("%s_Yposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
+        m_plots[Form("%s_TimeCut_signals_st%d", t, st)] = new TH1D(Form("%s_TimeCut_signals_st%d", t, st), Form("%s_TimeCut_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
+        m_plots[Form("%s_signals_st%d", t, st)] = new TH1D(Form("%s_signals_st%d", t, st), Form("%s_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
+        m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1D(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
+        m_plots[Form("%s_TimeCut_Xposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Xposition_st%d", t, st), Form("%s_TimeCut_Xposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
+        m_plots[Form("%s_TimeCut_Yposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Yposition_st%d", t, st), Form("%s_TimeCut_Yposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
+      }
 
-    //for stations
-    for (int st = 0; st < configuration.SCIFISTATION; ++st){
-      m_plots[Form("%s_Xposition_st%d", t, st)] = new TH1D(Form("%s_Xposition_st%d", t, st), Form("%s_Xposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-      m_plots[Form("%s_Yposition_st%d", t, st)] = new TH1D(Form("%s_Yposition_st%d", t, st), Form("%s_Yposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-      m_plots[Form("%s_TimeCut_signals_st%d", t, st)] = new TH1D(Form("%s_TimeCut_signals_st%d", t, st), Form("%s_TimeCut_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
-      m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1I(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
+      for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
+        m_plots[Form("%s_channels_st%d", t, st)] = new TH1D(Form("%s_channels_st%d", t, st), Form("%s_channels_st%dX; n channel; entries", t ,st+1), 514, -0.5, 512.5);
+        m_plots[Form("%s_TimeCut_channels_st%d", t, st)] = new TH1D(Form("%s_TimeCut_channels_st%d", t, st), Form("%s_TimeCut_channels_st%dX; n channel; entries", t ,st+1), 513, -0.5, 512.5);   
+        m_plots[Form("%s_Shower_TimeCut_channels_st%d", t, st)] = new TH1D(Form("%s_Shower_TimeCut_channels_st%d", t, st), Form("%s_Shower_TimeCut_channels_st%dX; n channel; entries", t ,st+1), 513
+        , -0.5, 512.5);          
+        if (st>3) {
+          m_plots[Form("%s_channels_st%d", t, st)]->SetTitle(Form("%s_channels_st%dY", t, st-3));
+          m_plots[Form("%s_TimeCut_channels_st%d", t, st)]->SetTitle(Form("%s_TimeCut_channels_st%dY", t, st-3));    
+          m_plots[Form("%s_Shower_TimeCut_channels_st%d", t, st)]->SetTitle(Form("%s_Shower_TimeCut_channels_st%dY", t, st-3));
+        }  
+      }
+    }
+
+    //Muon plots
+    else if ( tag == "MuFilter") {
+
+      const auto t{tag.c_str()};
+      m_plots[Form("%s_times", t)] = new TH1D(Form("%s_times", t), Form("%s_times; time (ns) ; entries", t), 150, -5, 145);
+      m_plots[Form("%s_signals", t)] = new TH1D(Form("%s_signals", t), Form("%s_signals; qdc? ; entries", t), 100, -30, 80);
+      m_plots[Form("%s_channels", t)] = new TH1D(Form("%s_channels", t), Form("%s_channels; n channel; entries", t), 100, 0, 100);
+      m_plots[Form("%s_charge", t)] = new TH1D(Form("%s_charge", t), Form("%s_charge; qdc?; entries", t), 200, 0, 200);
+      m_plots[Form("%s_station", t)] = new TH1D(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
+      m_plots[Form("%s_tofpet", t)] = new TH1D(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 10, 0, 10);
+      m_plots[Form("%s_boardID", t)] = new TH1D(Form("%s_boardID", t), Form("%s_boardID; board number; entries", t), 100, 0, 100);
+      
+      for (int st = 0; st < configuration.MUSTATION; ++st){
+
+      m_plots[Form("%s_signals_st%d", t, st)] = new TH1D(Form("%s_signals_st%d", t, st), Form("%s_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 1000);
+
+      }
     }
   }
 }
@@ -141,7 +178,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   std::map<std::string, TH1*> plots;
   std::vector<std::string> tags;
   tags.push_back("Scifi");
-  //tags.push_back("MuFilter");
+  tags.push_back("MuFilter");
 
 
   definePlots(configuration, plots, counters, tags);
@@ -155,11 +192,13 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   auto header = new SNDLHCEventHeader();
   fEventTree->SetBranchAddress("EventHeader.", &header);
   
+  int TimeCutEventsCounter{0};
   // Loop over events
   int iMax = fEventTree->GetEntries();
-  for ( int m =0; m < iMax; m++ ){ 
+  for ( int m = 0; m < iMax; m++ ){ 
     if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
     fEventTree->GetEntry(m);
+
 
     int sf_max=sf_hits->GetEntries();
     int mu_max=mu_hits->GetEntries();
@@ -167,6 +206,8 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     
     //remove almost empty events
     if (sf_max < configuration.SCIFIMINHITS || mu_max < configuration.MUMINHITS) continue;
+
+    bool shower{false};
 
     std::vector<Scifihits> Hits;
     std::vector<Scifihits> TimeCutHits;
@@ -177,21 +218,24 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     }
 
     plots["histo"]->Fill(sf_max, mu_max);
-
+    //################ SCIFI HITS ##################
     int st1Xcounter{0}, st1Ycounter{0};
     double st1Xtime, st1Ytime;
-
+    bool st1CutPass{false};
+    bool timeCutPass{false};
     for (int i=0 ; i<sf_max; i++) {
 
         auto t = tags[0].c_str();
         auto sf_hit = (sndScifiHit*) sf_hits->At(i);
 
         //plot some basic info
+        bool vertical = sf_hit->isVertical();
+
         int station = sf_hit->GetStation();
-        plots[Form("%s_station", t)]->Fill(station);
+        if (station > 0) plots[Form("%s_station", t)]->Fill(station);
         
-        int clocktime = sf_hit->GetTime(0);
-        double time = clocktime*TDC2ns;
+        double time = sf_hit->GetTime(0);
+       // double time = clocktime;//*TDC2ns;
         plots[Form("%s_times", t)]->Fill(time);
 
         int tofpet = sf_hit->GetTofpetID(0);
@@ -202,11 +246,13 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 
         double signal = sf_hit->GetSignal(0);
         plots[Form("%s_signals", t)]->Fill(signal);
+        plots[Form("%s_signals_st%d", t, station-1)]->Fill(signal);
 
+        
         int channel = sf_hit->Getchannel(0);
         plots[Form("%s_channels", t)]->Fill(channel);
-
-        bool vertical = sf_hit->isVertical();
+        if (vertical) plots[Form("%s_channels_st%d", t, station+3)]->Fill(64*tofpet+63-channel); 
+        else plots[Form("%s_channels_st%d", t, station-1)]->Fill(64*tofpet+63-channel);
 
         if (station == 1 ) {
           TimeCutHits[station-1].addHit(tofpet, channel, vertical);
@@ -214,29 +260,32 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
           else st1Xtime = time;
         }
         
-        
         double pos = (64*tofpet+63-channel)*0.025;
 
         if (vertical) plots[Form("%s_Yposition_st%d", t, station-1)]->Fill(pos); 
         else plots[Form("%s_Xposition_st%d", t, station-1)]->Fill(pos);
 
         Hits[station-1].addHit(tofpet, channel, vertical);
-
-        if (station > 1 && TimeCutHits[0].getXhits() == 1 && TimeCutHits[0].getYhits() == 1  && (st1Ytime-st1Xtime) < configuration.TIMECUT ){    //  && (st1Ytime-st1Xtime) < configuration.TIMECUT
-//          std::cout << "X Y time diff: " << st1Xtime-st1Ytime << std::endl;    ci sono eventi con 0 oppure -6.23768 y da evento precedente?
+        if (!st1CutPass && station > 1 && TimeCutHits[0].getXhits() == 1 && TimeCutHits[0].getYhits() == 1  && std::abs(st1Ytime-st1Xtime) < configuration.TIMECUT ) st1CutPass = true; 
+        if (station > 1 &&  st1CutPass){    //  && (st1Ytime-st1Xtime) < configuration.TIMECUT  
           double st1time = st1Ytime;
-          if ((time - st1time) < configuration.TIMECUT) {
+          if (std::abs(time - st1time) < configuration.TIMECUT) {
+            if (!timeCutPass) timeCutPass = true;
             TimeCutHits[station-1].addHit(tofpet, channel, vertical);
             plots[Form("%s_TimeCut_signals_st%d", t, station-1)]->Fill(signal);
             plots[Form("%s_tofpet_st%d", t, station-1)]->Fill(tofpet);
+            if (vertical) plots[Form("%s_TimeCut_Yposition_st%d", t, station-1)]->Fill(pos); 
+            else plots[Form("%s_TimeCut_Xposition_st%d", t, station-1)]->Fill(pos);
+            if (vertical) plots[Form("%s_TimeCut_channels_st%d", t, station+3)]->Fill(64*tofpet+63-channel); 
+            else plots[Form("%s_TimeCut_channels_st%d", t, station-1)]->Fill(64*tofpet+63-channel);
           }
-        } 
-        
+        }         
     }
 
+    if (timeCutPass) TimeCutEventsCounter+=1;
     //check where the shower starts
-    std::vector<bool> isShowering;
-    std::vector<bool> TC_isShowering;
+    std::array<bool,4> isShowering{false};
+    std::array<bool,4> TC_isShowering{false};
     for (int st = 0;  st < configuration.SCIFISTATION; ++st) {
       plots[Form("HitDistribution_st%d", st)]->Fill(Hits[st].getXhits(), Hits[st].getYhits());
       
@@ -248,8 +297,13 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
       plots[Form("TimeCut_HitsperStation_%d", st)]->Fill(TimeCutHits[st].getXhits());
       plots[Form("TimeCut_HitsperStation_%d", st+4)]->Fill(TimeCutHits[st].getYhits());
 
-      isShowering.emplace_back(Hits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT));
-      TC_isShowering.emplace_back(TimeCutHits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT));
+      shower = Hits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT);
+      if (shower) isShowering[st] = 1;
+
+      bool TCshower = TimeCutHits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT);
+      if (TCshower) TC_isShowering[st] = 1;
+      //if (TCshower) std::cout << " in station " << st << " with " << TimeCutHits[st].getXhits() << " X hits and " << TimeCutHits[st].getYhits() << " Y hits TC is showering " << TC_isShowering[st] << std::endl;
+      
     
       if (Hits[st].checkMultipleHits()) std::cout << "Same channel firing more than once in st " << st << std::endl;
     }
@@ -257,10 +311,13 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     for (int i = 0; i < configuration.SCIFISTATION; ++i) {
       if (isShowering[i]) {
         plots["ShowerStart"]->Fill(i);
+        for (int bin = 0; bin < TimeCutHits[i].getSize(); ++bin)  {
+          plots[Form("%s_Shower_TimeCut_channels_st%d", tags[0].c_str(), i)]->Fill(TimeCutHits[i].xHits[bin]);
+          plots[Form("%s_Shower_TimeCut_channels_st%d", tags[0].c_str(), i+4)]->Fill(TimeCutHits[i].yHits[bin]);
+        }
         break;
       }
-
-      if (i == (configuration.SCIFISTATION-1)) plots["ShowerStart"]->Fill(-1);
+      if (i == (configuration.SCIFISTATION)) plots["ShowerStart"]->Fill(-1);
     }
 
     for (int i = 0; i < configuration.SCIFISTATION; ++i) {
@@ -268,42 +325,49 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
         plots["TimeCut_ShowerStart"]->Fill(i);
         break;
       }
-      if (i == (configuration.SCIFISTATION-1)) plots["TimeCut_ShowerStart"]->Fill(-1);
+      
+      if (i == (configuration.SCIFISTATION)) plots["TimeCut_ShowerStart"]->Fill(-1);
     }
 
               
 
-
-  /*  for (int i=0 ; i<mu_max; i++) {
+    //################ MU FILTER HITS ##################
+    for (int i=0 ; i<mu_max; i++) {
         auto t = tags[1].c_str();
         auto mu_hit = (MuFilterHit*) mu_hits->At(i);
         //plot some basic info
+
+        int boardID = mu_hit->GetBoardID(0);
+        plots[Form("%s_boardID", t)]->Fill(boardID);
+
         int station = mu_hit->GetPlane();
         plots[Form("%s_station", t)]->Fill(station);
 
-        double time = mu_hit->GetTime()*TDC2ns;
-        plots[Form("%s_times", t)] ->Fill(time);
-
         bool vertical = mu_hit->isVertical();
 
-        
-        for (int sipm; sipm < NSIPM*NSIDE; ++sipm ){
-        if (vertical && sipm > 0) continue;             //DS vertical has only 1 sipm to read
-        int tofpet = mu_hit->GetTofpetID(sipm);
-        plots[Form("%s_tofpet", t)]->Fill(tofpet);
+        for (int sipm = 0; sipm < NsidesNch; ++sipm ){
+          double time = mu_hit->GetTime(sipm); //*TDC2ns;
+          if (time < 0) continue;
+          //std::cout << "time: " << time << std::endl;
+          plots[Form("%s_times", t)] ->Fill(time);
+       
+          if (vertical && sipm > 0) continue;             //DS vertical has only 1 sipm to read
+          int tofpet = mu_hit->GetTofpetID(sipm);
+          //std::cout << "tofpet: " << tofpet << std::endl;
+          plots[Form("%s_tofpet", t)]->Fill(tofpet);
 
-        int boardID = mu_hit->GetBoardID(sipm);
-        plots[Form("%s_boardID", t)]->Fill(boardID);
+          double signal = mu_hit->GetSignal(sipm);
+          //std::cout << "signal: " << signal << std::endl;
+          plots[Form("%s_signals", t)]->Fill(signal);
 
-        double signal = mu_hit->GetSignal(sipm);
-        plots[Form("%s_signals", t)]->Fill(signal);
+          int channel = mu_hit->Getchannel(sipm);
+          //std::cout << "channel: " << channel << std::endl;
+          plots[Form("%s_channels", t)]->Fill(channel);
 
-        int channel = mu_hit->Getchannel(sipm);
-        plots[Form("%s_channels", t)]->Fill(channel);
       
+        }
       }
-    }*/
-  }
+    }
 
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
@@ -324,13 +388,16 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   std::cout << "Shower start ratio for station 4 (" << plots["TimeCut_ShowerStart"]->GetBinContent(6) << ") and station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) 
             << ") is " << plots["TimeCut_ShowerStart"]->GetBinContent(6)/plots["TimeCut_ShowerStart"]->GetBinContent(5) << std::endl;
 
+  /*std::cout << "Time cut tofpet" << std::endl;
   for (int bin = 0; bin < 10; ++bin) {
     auto t = tags[0].c_str();
     std::cout << "For bin " << bin << std::endl;
     std::cout << "Stat 2: " <<  plots[Form("%s_tofpet_st%d", t, 1)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 1)]->GetEntries() << std::endl;
     std::cout << "Stat 3: " <<  plots[Form("%s_tofpet_st%d", t, 2)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 2)]->GetEntries() << std::endl;
     std::cout << "Stat 4: " <<  plots[Form("%s_tofpet_st%d", t, 3)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 3)]->GetEntries() << std::endl;
-  }
+  }*/
+
+  std::cout << "Fraction of events that pass the time cut (" << TimeCutEventsCounter << ") over total events (" <<  iMax << ") is " << double(TimeCutEventsCounter/iMax) << std::endl;
 
   // ##################### Write results to file #####################
   outputFile.Write();
