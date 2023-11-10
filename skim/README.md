@@ -116,13 +116,14 @@ bool skim_function(std::shared_ptr<config_t> cfg, TClonesArray *sf_hits) {
                  sizes_by_plane.begin(),
                  [](const auto &plane) { return plane.sizes(); });
 
-  if (sizes_by_plane[0].x != cfg->SCIFIMINHITS ||
-      sizes_by_plane[0].y != cfg->SCIFIMINHITS) {
+  if (sizes_by_plane[0].x != 1 || sizes_by_plane[0].y != 1) {
     return false;
   }
 
-  return std::any_of(
-      std::next(sizes_by_plane.begin()), sizes_by_plane.end(),
-      [](const auto &sizes) { return sizes.x > 60 && sizes.y > 60; });
+  return std::any_of(std::next(sizes_by_plane.begin()), sizes_by_plane.end(),
+                     [cfg](const auto &sizes) {
+                       return sizes.x > cfg->SCIFIMINHITS &&
+                              sizes.y > cfg->SCIFIMINHITS;
+                     });
 };
 ```

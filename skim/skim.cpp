@@ -39,9 +39,9 @@ struct config_t {
 
   // geometry parameters
   double SCIFIDIM{-1};
-};
+}
 
-static constexpr config_t config_tb{4, 5, 3, 35, 5, 30, 10, 5, 1, 1, 13};
+static constexpr config_t config_tb{4, 5, 3, 35, 5, 30, 30, 5, 1, 1, 13};
 static constexpr config_t config_ti18{5, 8, 5, 56, -1, -1, 2, 2, 3, -1, -1};
 
 std::shared_ptr<config_t> get_config(bool is_tb) {
@@ -126,14 +126,15 @@ bool skim_function(std::shared_ptr<config_t> cfg, TClonesArray *sf_hits) {
                  sizes_by_plane.begin(),
                  [](const auto &plane) { return plane.sizes(); });
 
-  if (sizes_by_plane[0].x != cfg->SCIFIMINHITS ||
-      sizes_by_plane[0].y != cfg->SCIFIMINHITS) {
+  if (sizes_by_plane[0].x != 1 || sizes_by_plane[0].y != 1) {
     return false;
   }
 
-  return std::any_of(
-      std::next(sizes_by_plane.begin()), sizes_by_plane.end(),
-      [](const auto &sizes) { return sizes.x > 60 && sizes.y > 60; });
+  return std::any_of(std::next(sizes_by_plane.begin()), sizes_by_plane.end(),
+                     [cfg](const auto &sizes) {
+                       return sizes.x > cfg->SCIFIMINHITS &&
+                              sizes.y > cfg->SCIFIMINHITS;
+                     });
 };
 
 //*****************************************************
