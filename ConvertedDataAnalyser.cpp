@@ -3,7 +3,7 @@
 #endif
 
 #include "Inclusion.h"
-#include "Scifihits.h"
+#include "SciFiPlaneView.h"
 
 const double FREQ{160.316E6};
 const double TDC2ns = 1E9/FREQ;
@@ -12,28 +12,6 @@ const int NSIDE{2};
 const int NsidesNch{16};
 const int TOFPETperBOARD{8};
 const int TOFPETCHANNELS{64};
-
-
-struct cfg
-{
-  int SCIFISTATION{-1};
-  int MUSTATION{-1};
-  int NWALLS{-1};
-  int SCIFITHRESHOLD{-1};
-  int SCIFIMAXGAP{-1};
-  int SCIFISIDECUT{-1};
-  int SCIFIMINHITS{999};
-  int MUMINHITS{999};
-  int BOARDPERSTATION{-1};
-
-  double TIMECUT{-1};
-
-  //geometry parameters
-  double SCIFIDIM{-1};
-  
-  const char *INFILENAME;
-  const char *OUTFILENAME;
-};
 
 cfg setCfg( bool istb ) {
   cfg config;
@@ -67,12 +45,13 @@ cfg setCfg( bool istb ) {
 }
 
 
+
 void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
   m_plots["histo"] = new TH2F("histo", "; # scifi hits; # mu hits", 100, 0, 100, 100, 0, 100);
 
   // events characteristics plots
-  m_plots["ShowerStart"] = new TH1D("ShowerStart", "ShowerStart; station; entries", 8, -2, 5);
-  m_plots["TimeCut_ShowerStart"] = new TH1D("TimeCut_ShowerStart", "TimeCut_ShowerStart; station; entries", 8, -2, 5);
+  m_plots["ShowerStart"] = new TH1D("ShowerStart", "ShowerStart; station; entries", 7, -2, 5);
+  m_plots["TimeCut_ShowerStart"] = new TH1D("TimeCut_ShowerStart", "TimeCut_ShowerStart; station; entries", 7, -2, 5);
   // together x and y
   // SPOSTA IN %s
   for (int st = 0; st < configuration.SCIFISTATION; ++st){
@@ -148,6 +127,41 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
   }
 }
 
+std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
+
+  std::vector<SciFiPlaneView> scifi_planes;
+
+  int begin{};
+  int count{};
+
+  int n_sf_hits{sf_hits->GetEntries()};
+
+  for (int st{1}; st <= configuration.SCIFISTATION; ++st) {
+
+    while (count < n_sf_hits &&
+           st == static_cast<sndScifiHit *>(sf_hits->At(count))->GetStation()) {
+      ++count;
+    }
+
+    scifi_planes.emplace_back(SciFiPlaneView(configuration, sf_hits, begin, count, st));
+  }
+
+  return scifi_planes;
+
+}
+
+int checkShower(cfg configuration, std::vector<SciFiPlaneView> scifi_planes ) {
+  //find start of shower
+  for (auto &plane : scifi_planes) {
+    if (plane.sizes().x > configuration.SCIFITHRESHOLD && plane.sizes().y > configuration.SCIFITHRESHOLD) return plane.getStation(); 
+  }
+  return -1;
+}
+
+// timecut -> vector scifiplaneview time cut 
+// nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
+
+// 
 
 void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 {
@@ -158,6 +172,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 
   // ##################### Set right parameters for data type (TB/TI18) #####################
   cfg configuration = setCfg(isTB);
+  
   // ##################### Read file #####################
   //int runNumber{100633};  
   // 100633: pion 140 GeV 3 walls file
@@ -192,37 +207,25 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   auto header = new SNDLHCEventHeader();
   fEventTree->SetBranchAddress("EventHeader.", &header);
   
-  int TimeCutEventsCounter{0};
+
   // Loop over events
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
     if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
+    if (m >1000) break;
     fEventTree->GetEntry(m);
 
 
     int sf_max=sf_hits->GetEntries();
     int mu_max=mu_hits->GetEntries();
-
     
-    //remove almost empty events
-    if (sf_max < configuration.SCIFIMINHITS || mu_max < configuration.MUMINHITS) continue;
-
-    bool shower{false};
-
-    std::vector<Scifihits> Hits;
-    std::vector<Scifihits> TimeCutHits;
-
-    for (int i = 0; i < configuration.SCIFISTATION; ++i) {
-      Hits.emplace_back(Scifihits(configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS));
-      TimeCutHits.emplace_back(Scifihits(configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS));
-    }
-
-    plots["histo"]->Fill(sf_max, mu_max);
+    auto scifi_planes = fillSciFi(configuration, sf_hits);
+    int showerStart = checkShower(configuration, scifi_planes);
+    plots["ShowerStart"]->Fill(showerStart);
+    
+/*
     //################ SCIFI HITS ##################
-    int st1Xcounter{0}, st1Ycounter{0};
-    double st1Xtime, st1Ytime;
-    bool st1CutPass{false};
-    bool timeCutPass{false};
+
     for (int i=0 ; i<sf_max; i++) {
 
         auto t = tags[0].c_str();
@@ -232,172 +235,52 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
         bool vertical = sf_hit->isVertical();
 
         int station = sf_hit->GetStation();
-        if (station > 0) plots[Form("%s_station", t)]->Fill(station);
-        
+
         double time = sf_hit->GetTime(0);
        // double time = clocktime;//*TDC2ns;
-        plots[Form("%s_times", t)]->Fill(time);
 
         int tofpet = sf_hit->GetTofpetID(0);
-        plots[Form("%s_tofpet", t)]->Fill(tofpet);
 
         int boardID = sf_hit->GetBoardID(0);
-        plots[Form("%s_boardID", t)]->Fill(boardID);
 
         double signal = sf_hit->GetSignal(0);
-        plots[Form("%s_signals", t)]->Fill(signal);
-        plots[Form("%s_signals_st%d", t, station-1)]->Fill(signal);
-
         
         int channel = sf_hit->Getchannel(0);
-        plots[Form("%s_channels", t)]->Fill(channel);
-        if (vertical) plots[Form("%s_channels_st%d", t, station+3)]->Fill(64*tofpet+63-channel); 
-        else plots[Form("%s_channels_st%d", t, station-1)]->Fill(64*tofpet+63-channel);
-
-        if (station == 1 ) {
-          TimeCutHits[station-1].addHit(tofpet, channel, vertical);
-          if (vertical) st1Ytime = time;
-          else st1Xtime = time;
-        }
         
         double pos = (64*tofpet+63-channel)*0.025;
-
-        if (vertical) plots[Form("%s_Yposition_st%d", t, station-1)]->Fill(pos); 
-        else plots[Form("%s_Xposition_st%d", t, station-1)]->Fill(pos);
-
-        Hits[station-1].addHit(tofpet, channel, vertical);
-        if (!st1CutPass && station > 1 && TimeCutHits[0].getXhits() == 1 && TimeCutHits[0].getYhits() == 1  && std::abs(st1Ytime-st1Xtime) < configuration.TIMECUT ) st1CutPass = true; 
-        if (station > 1 &&  st1CutPass){    //  && (st1Ytime-st1Xtime) < configuration.TIMECUT  
-          double st1time = st1Ytime;
-          if (std::abs(time - st1time) < configuration.TIMECUT) {
-            if (!timeCutPass) timeCutPass = true;
-            TimeCutHits[station-1].addHit(tofpet, channel, vertical);
-            plots[Form("%s_TimeCut_signals_st%d", t, station-1)]->Fill(signal);
-            plots[Form("%s_tofpet_st%d", t, station-1)]->Fill(tofpet);
-            if (vertical) plots[Form("%s_TimeCut_Yposition_st%d", t, station-1)]->Fill(pos); 
-            else plots[Form("%s_TimeCut_Xposition_st%d", t, station-1)]->Fill(pos);
-            if (vertical) plots[Form("%s_TimeCut_channels_st%d", t, station+3)]->Fill(64*tofpet+63-channel); 
-            else plots[Form("%s_TimeCut_channels_st%d", t, station-1)]->Fill(64*tofpet+63-channel);
-          }
-        }         
+   
     }
-
-    if (timeCutPass) TimeCutEventsCounter+=1;
-    //check where the shower starts
-    std::array<bool,4> isShowering{false};
-    std::array<bool,4> TC_isShowering{false};
-    for (int st = 0;  st < configuration.SCIFISTATION; ++st) {
-      plots[Form("HitDistribution_st%d", st)]->Fill(Hits[st].getXhits(), Hits[st].getYhits());
-      
-      plots[Form("TimeCut_HitDistribution_st%d", st)]->Fill(TimeCutHits[st].getXhits(), TimeCutHits[st].getYhits());
-      
-      plots[Form("HitsperStation_%d", st)]->Fill(Hits[st].getXhits());
-      plots[Form("HitsperStation_%d", st+4)]->Fill(Hits[st].getYhits());
-
-      plots[Form("TimeCut_HitsperStation_%d", st)]->Fill(TimeCutHits[st].getXhits());
-      plots[Form("TimeCut_HitsperStation_%d", st+4)]->Fill(TimeCutHits[st].getYhits());
-
-      shower = Hits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT);
-      if (shower) isShowering[st] = 1;
-
-      bool TCshower = TimeCutHits[st].checkShower(configuration.SCIFITHRESHOLD, configuration.SCIFIMAXGAP, configuration.SCIFISIDECUT);
-      if (TCshower) TC_isShowering[st] = 1;
-      //if (TCshower) std::cout << " in station " << st << " with " << TimeCutHits[st].getXhits() << " X hits and " << TimeCutHits[st].getYhits() << " Y hits TC is showering " << TC_isShowering[st] << std::endl;
-      
-    
-      if (Hits[st].checkMultipleHits()) std::cout << "Same channel firing more than once in st " << st << std::endl;
-    }
-    
-    for (int i = 0; i < configuration.SCIFISTATION; ++i) {
-      if (isShowering[i]) {
-        plots["ShowerStart"]->Fill(i);
-        for (int bin = 0; bin < TimeCutHits[i].getSize(); ++bin)  {
-          plots[Form("%s_Shower_TimeCut_channels_st%d", tags[0].c_str(), i)]->Fill(TimeCutHits[i].xHits[bin]);
-          plots[Form("%s_Shower_TimeCut_channels_st%d", tags[0].c_str(), i+4)]->Fill(TimeCutHits[i].yHits[bin]);
-        }
-        break;
-      }
-      if (i == (configuration.SCIFISTATION)) plots["ShowerStart"]->Fill(-1);
-    }
-
-    for (int i = 0; i < configuration.SCIFISTATION; ++i) {
-      if (TC_isShowering[i]){
-        plots["TimeCut_ShowerStart"]->Fill(i);
-        break;
-      }
-      
-      if (i == (configuration.SCIFISTATION)) plots["TimeCut_ShowerStart"]->Fill(-1);
-    }
-
-              
 
     //################ MU FILTER HITS ##################
     for (int i=0 ; i<mu_max; i++) {
         auto t = tags[1].c_str();
         auto mu_hit = (MuFilterHit*) mu_hits->At(i);
-        //plot some basic info
 
         int boardID = mu_hit->GetBoardID(0);
-        plots[Form("%s_boardID", t)]->Fill(boardID);
 
         int station = mu_hit->GetPlane();
-        plots[Form("%s_station", t)]->Fill(station);
 
         bool vertical = mu_hit->isVertical();
 
         for (int sipm = 0; sipm < NsidesNch; ++sipm ){
           double time = mu_hit->GetTime(sipm); //*TDC2ns;
-          if (time < 0) continue;
-          //std::cout << "time: " << time << std::endl;
-          plots[Form("%s_times", t)] ->Fill(time);
-       
+        
           if (vertical && sipm > 0) continue;             //DS vertical has only 1 sipm to read
           int tofpet = mu_hit->GetTofpetID(sipm);
-          //std::cout << "tofpet: " << tofpet << std::endl;
-          plots[Form("%s_tofpet", t)]->Fill(tofpet);
-
+        
           double signal = mu_hit->GetSignal(sipm);
-          //std::cout << "signal: " << signal << std::endl;
-          plots[Form("%s_signals", t)]->Fill(signal);
-
+        
           int channel = mu_hit->Getchannel(sipm);
-          //std::cout << "channel: " << channel << std::endl;
-          plots[Form("%s_channels", t)]->Fill(channel);
-
-      
+              
         }
       }
+  */  
     }
 
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
   auto end = std::chrono::system_clock::to_time_t(stop);
   std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
-
-  // Write ratio of showering event in different stations
-  std::cout << "Shower start ratio for station 3 (" << plots["ShowerStart"]->GetBinContent(5) << ") and station 2 (" << plots["ShowerStart"]->GetBinContent(4) 
-            << ") is " << plots["ShowerStart"]->GetBinContent(5)/plots["ShowerStart"]->GetBinContent(4) << std::endl;
-
-  std::cout << "Shower start ratio for station 4 (" << plots["ShowerStart"]->GetBinContent(6) << ") and station 3 (" << plots["ShowerStart"]->GetBinContent(5) 
-            << ") is " << plots["ShowerStart"]->GetBinContent(6)/plots["ShowerStart"]->GetBinContent(5) << std::endl;
-  
-  std::cout << "******************************** TIME CUT ********************************" <<std::endl;
-  std::cout << "Shower start ratio for station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) << ") and station 2 (" << plots["TimeCut_ShowerStart"]->GetBinContent(4) 
-            << ") is " << plots["TimeCut_ShowerStart"]->GetBinContent(5)/plots["TimeCut_ShowerStart"]->GetBinContent(4) << std::endl;
-
-  std::cout << "Shower start ratio for station 4 (" << plots["TimeCut_ShowerStart"]->GetBinContent(6) << ") and station 3 (" << plots["TimeCut_ShowerStart"]->GetBinContent(5) 
-            << ") is " << plots["TimeCut_ShowerStart"]->GetBinContent(6)/plots["TimeCut_ShowerStart"]->GetBinContent(5) << std::endl;
-
-  /*std::cout << "Time cut tofpet" << std::endl;
-  for (int bin = 0; bin < 10; ++bin) {
-    auto t = tags[0].c_str();
-    std::cout << "For bin " << bin << std::endl;
-    std::cout << "Stat 2: " <<  plots[Form("%s_tofpet_st%d", t, 1)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 1)]->GetEntries() << std::endl;
-    std::cout << "Stat 3: " <<  plots[Form("%s_tofpet_st%d", t, 2)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 2)]->GetEntries() << std::endl;
-    std::cout << "Stat 4: " <<  plots[Form("%s_tofpet_st%d", t, 3)]->GetBinContent(bin) / plots[Form("%s_tofpet_st%d", t, 3)]->GetEntries() << std::endl;
-  }*/
-
-  std::cout << "Fraction of events that pass the time cut (" << TimeCutEventsCounter << ") over total events (" <<  iMax << ") is " << double(TimeCutEventsCounter/iMax) << std::endl;
 
   // ##################### Write results to file #####################
   outputFile.Write();
