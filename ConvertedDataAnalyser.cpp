@@ -131,19 +131,28 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
   std::vector<SciFiPlaneView> scifi_planes;
 
-  int begin{};
-  int count{};
+  int begin{0};
+  int count{0};
 
   int n_sf_hits{sf_hits->GetEntries()};
+  std::cout<<n_sf_hits<<std::endl;
 
   for (int st{1}; st <= configuration.SCIFISTATION; ++st) {
-
+    begin = count;
     while (count < n_sf_hits &&
            st == static_cast<sndScifiHit *>(sf_hits->At(count))->GetStation()) {
       ++count;
     }
 
-    scifi_planes.emplace_back(SciFiPlaneView(configuration, sf_hits, begin, count, st));
+    auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
+    plane.fillQDC();
+    if (sf_hits->GetEntries()>0) {
+        for (int j{0}; j<512; j++) {
+            std::cout<<plane.qdc.x[j]<<"\t";
+        }
+        std::cout<<std::endl;
+    }
+    scifi_planes.emplace_back(plane);
   }
 
   return scifi_planes;

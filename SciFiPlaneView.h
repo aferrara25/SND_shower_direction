@@ -2,6 +2,7 @@
 #define SciFiPlaneView_h
 
 #include<vector>
+#include<array>
 #include "TChain.h"
 #include "TClonesArray.h"
 
@@ -45,8 +46,11 @@ public:
     T y{};
   };
 
+  xy_pair<std::array<double,512>> qdc;
+
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
-  auto sizes() const ;
+  auto sizes() const;
+  void fillQDC();
 
   const int getStation() const;
   const cfg getConfig() const;
