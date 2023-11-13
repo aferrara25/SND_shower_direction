@@ -4,7 +4,7 @@
 In sndsw environment, open ROOT, run the analysis with:
 
 ```
-.L ScifiPlaneView.cpp
+.L SciFiPlaneView.cpp
 .L ConvertedDataAnalyser.cpp    
 runAnalysis( run_number, number_files_to_read, isTBdata) 
 ```

@@ -150,10 +150,10 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
 }
 
-int checkShower(cfg configuration, std::vector<SciFiPlaneView> scifi_planes ) {
+int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
   //find start of shower
   for (auto &plane : scifi_planes) {
-    if (plane.sizes().x > configuration.SCIFITHRESHOLD && plane.sizes().y > configuration.SCIFITHRESHOLD) return plane.getStation(); 
+    if (plane.sizes().x > plane.getConfig().SCIFITHRESHOLD && plane.sizes().y > plane.getConfig().SCIFITHRESHOLD) return plane.getStation(); 
   }
   return -1;
 }
@@ -220,7 +220,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     int mu_max=mu_hits->GetEntries();
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
-    int showerStart = checkShower(configuration, scifi_planes);
+    int showerStart = checkShower(scifi_planes);
     plots["ShowerStart"]->Fill(showerStart);
     
 /*

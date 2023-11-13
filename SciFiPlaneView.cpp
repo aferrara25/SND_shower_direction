@@ -27,3 +27,7 @@ auto SciFiPlaneView::sizes() const{
 const int SciFiPlaneView::getStation() const {
     return station;
 }
+
+const cfg SciFiPlaneView::getConfig() const {
+    return config;
+}
