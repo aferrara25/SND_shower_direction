@@ -32,10 +32,10 @@ const cfg SciFiPlaneView::getConfig() const {
     return config;
 }
 
-const int getBegin() const {
+const int SciFiPlaneView::getBegin() const {
   return begin;
 }
 
-const int getEnd() const {
+const int SciFiPlaneView::getEnd() const {
   return end;
 }
