@@ -47,7 +47,11 @@ public:
 
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
   auto sizes() const ;
+
   const int getStation() const;
   const cfg getConfig() const;
+  const int getBegin() const;
+  const int getEnd() const;
+
 };
 #endif

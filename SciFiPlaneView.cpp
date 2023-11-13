@@ -31,3 +31,11 @@ const int SciFiPlaneView::getStation() const {
 const cfg SciFiPlaneView::getConfig() const {
     return config;
 }
+
+const int getBegin() const {
+  return begin;
+}
+
+const int getEnd() const {
+  return end;
+}
