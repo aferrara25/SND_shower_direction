@@ -91,7 +91,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
         m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1D(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
         m_plots[Form("%s_TimeCut_Xposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Xposition_st%d", t, st), Form("%s_TimeCut_Xposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
         m_plots[Form("%s_TimeCut_Yposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Yposition_st%d", t, st), Form("%s_TimeCut_Yposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-        m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; channel x; channel y", t, st+1), 513, -0.5, 512.5, 513, -0.5, 512.5);
+        m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st+1), 513, -0.5*.025, 512.5*.025, 513, -0.5*.025, 512.5*.025);
       }
 
       for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
@@ -128,6 +128,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
   }
 }
 
+
 std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
   std::vector<SciFiPlaneView> scifi_planes;
@@ -136,7 +137,6 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
   int count{0};
 
   int n_sf_hits{sf_hits->GetEntries()};
-  //std::cout<<n_sf_hits<<std::endl;
 
   for (int st{1}; st <= configuration.SCIFISTATION; ++st) {
     begin = count;
@@ -147,12 +147,6 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
     auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
     plane.fillQDC();
-    /*if (sf_hits->GetEntries()>0) {
-        for (int j{0}; j<512; j++) {
-            //std::cout<<plane.qdc.x[j]<<"\t";
-        }
-        std::cout<<std::endl;
-    }*/
     scifi_planes.emplace_back(plane);
   }
 
@@ -168,12 +162,14 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
   return -1;
 }
 
-std::array<int, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
-  std::array<int,2> centroid = {-1};
-  double maxSignal{-1};
+std::array<double, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
+  // find shower centroid position in cm
+  std::array<double,2> centroid = {-1, -1};
+   
+  double maxSignal{0};
   auto config = plane.getConfig();
   for (int index{0}; index <2; ++index) {
-    for (int i{0}; i < config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize; ++i) {
+    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {
   
       double signalSum{0};
 
@@ -190,10 +186,11 @@ std::array<int, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
         }
 
         if (j == i+windowSize-1) {
+          if (den < 2) continue;
           double ratio =  signalSum/den;
           if ( maxSignal < ratio ) {
             maxSignal = ratio;
-            centroid[index] = i;
+            centroid[index] = (i+(windowSize*.5)) *.025;    // conversion in cm
           }
         }
       }
@@ -206,7 +203,6 @@ std::array<int, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
-// 
 
 void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 {
@@ -272,7 +268,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     for (auto plane : scifi_planes){
       auto centroid = findCentroid(plane, 6);
       plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
-      //std::cout << "In station: " << plane.getStation() << "  " << centroid[0] << "   ||    "<< centroid[1] << std::endl;
+      //std::cout << "in station: " << plane.getStation() << " centroid x: " << centroid[0] << "  ||     centroid y: " << centroid[1] << std::endl; 
     }
 
 /*
@@ -327,7 +323,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
         }
       }
   */  
-    }
+  }
 
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
