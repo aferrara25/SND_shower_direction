@@ -203,6 +203,23 @@ std::array<double, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
+bool hitCut (std::vector<SciFiPlaneView> detector){
+  for (auto plane : detector){
+    
+    if (plane.getStation() == 1 && (plane.sizes().x != 1 || plane.sizes().y !=1 ) ) return false;
+    else if (plane.getStation() > 1){
+      int thr = plane.getConfig().SCIFITHRESHOLD;
+      if (plane.sizes().x < thr || plane.sizes().y < thr) return false;
+    }
+  }
+  return true;
+}
+
+
+/*bool timeCut (std::vector<SciFiPlaneView> detector) {
+  if ()
+  double referenceTime 
+}*/
 
 void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 {
@@ -253,7 +270,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
     if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
-    //if (m >1000) break;
+    //if (m >10000) break;
     fEventTree->GetEntry(m);
 
 
@@ -263,6 +280,8 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     if (sf_max < 15 && mu_max < 3 ) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
+    if ( !hitCut(scifi_planes) ) continue;
+
     int showerStart = checkShower(scifi_planes);
     plots["ShowerStart"]->Fill(showerStart);
     for (auto plane : scifi_planes){
@@ -270,59 +289,6 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
       plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
       //std::cout << "in station: " << plane.getStation() << " centroid x: " << centroid[0] << "  ||     centroid y: " << centroid[1] << std::endl; 
     }
-
-/*
-    //################ SCIFI HITS ##################
-
-    for (int i=0 ; i<sf_max; i++) {
-
-        auto t = tags[0].c_str();
-        auto sf_hit = (sndScifiHit*) sf_hits->At(i);
-
-        //plot some basic info
-        bool vertical = sf_hit->isVertical();
-
-        int station = sf_hit->GetStation();
-
-        double time = sf_hit->GetTime(0);
-       // double time = clocktime;//*TDC2ns;
-
-        int tofpet = sf_hit->GetTofpetID(0);
-
-        int boardID = sf_hit->GetBoardID(0);
-
-        double signal = sf_hit->GetSignal(0);
-        
-        int channel = sf_hit->Getchannel(0);
-        
-        double pos = (64*tofpet+63-channel)*0.025;
-   
-    }
-
-    //################ MU FILTER HITS ##################
-    for (int i=0 ; i<mu_max; i++) {
-        auto t = tags[1].c_str();
-        auto mu_hit = (MuFilterHit*) mu_hits->At(i);
-
-        int boardID = mu_hit->GetBoardID(0);
-
-        int station = mu_hit->GetPlane();
-
-        bool vertical = mu_hit->isVertical();
-
-        for (int sipm = 0; sipm < NsidesNch; ++sipm ){
-          double time = mu_hit->GetTime(sipm); //*TDC2ns;
-        
-          if (vertical && sipm > 0) continue;             //DS vertical has only 1 sipm to read
-          int tofpet = mu_hit->GetTofpetID(sipm);
-        
-          double signal = mu_hit->GetSignal(sipm);
-        
-          int channel = mu_hit->Getchannel(sipm);
-              
-        }
-      }
-  */  
   }
 
   auto stop = std::chrono::system_clock::now();
