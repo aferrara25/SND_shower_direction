@@ -91,6 +91,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
         m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1D(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
         m_plots[Form("%s_TimeCut_Xposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Xposition_st%d", t, st), Form("%s_TimeCut_Xposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
         m_plots[Form("%s_TimeCut_Yposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Yposition_st%d", t, st), Form("%s_TimeCut_Yposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
+        m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; channel x; channel y", t, st+1), 513, -0.5, 512.5, 513, -0.5, 512.5);
       }
 
       for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
@@ -135,7 +136,7 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
   int count{0};
 
   int n_sf_hits{sf_hits->GetEntries()};
-  std::cout<<n_sf_hits<<std::endl;
+  //std::cout<<n_sf_hits<<std::endl;
 
   for (int st{1}; st <= configuration.SCIFISTATION; ++st) {
     begin = count;
@@ -146,12 +147,12 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
     auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
     plane.fillQDC();
-    if (sf_hits->GetEntries()>0) {
+    /*if (sf_hits->GetEntries()>0) {
         for (int j{0}; j<512; j++) {
-            std::cout<<plane.qdc.x[j]<<"\t";
+            //std::cout<<plane.qdc.x[j]<<"\t";
         }
         std::cout<<std::endl;
-    }
+    }*/
     scifi_planes.emplace_back(plane);
   }
 
@@ -165,6 +166,51 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
     if (plane.sizes().x > plane.getConfig().SCIFITHRESHOLD && plane.sizes().y > plane.getConfig().SCIFITHRESHOLD) return plane.getStation(); 
   }
   return -1;
+}
+
+std::array<int, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
+  std::array<int,2> centroid = {-1};
+  double maxSignalX{-1};
+  double maxSignalY{-1};
+  auto config = plane.getConfig();
+
+  for (int i{0}; i < config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize; ++i) {
+    double signalSumX{0};
+    double signalSumY{0};
+
+    for (int j{i}; j < (i+windowSize); ++j) {
+        double signalX = plane.qdc.x[j];
+        double signalY = plane.qdc.y[j];
+        int denX, denY = windowSize;
+        if ( signalX != -999 ){
+          signalSumX += signalX;
+        } else {
+          denX -=1;
+        }
+
+        if ( signalY != -999 ){
+          signalSumY += signalY; 
+        } else {
+          denY -=1;
+        }
+        if (j == i+windowSize-1) {
+          double ratioX =  signalSumX/denX;
+          if ( maxSignalX < ratioX ) {
+            maxSignalX = ratioX;
+            centroid[0] = i;
+          }
+
+          double ratioY = signalSumY/denY;
+          if ( maxSignalY < ratioY ) {
+            maxSignalY = ratioY;
+            centroid[1] = i;
+          }
+        }
+    }
+
+  }
+
+  return centroid;
 }
 
 // timecut -> vector scifiplaneview time cut 
@@ -221,17 +267,24 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
     if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
-    if (m >1000) break;
+    //if (m >1000) break;
     fEventTree->GetEntry(m);
 
 
     int sf_max=sf_hits->GetEntries();
     int mu_max=mu_hits->GetEntries();
+
+    if (sf_max < 15 && mu_max < 3 ) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
     int showerStart = checkShower(scifi_planes);
     plots["ShowerStart"]->Fill(showerStart);
-    
+    for (auto plane : scifi_planes){
+      auto centroid = findCentroid(plane, 6);
+      plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
+      //std::cout << "In station: " << plane.getStation() << "  " << centroid[0] << "   ||    "<< centroid[1] << std::endl;
+    }
+
 /*
     //################ SCIFI HITS ##################
 
