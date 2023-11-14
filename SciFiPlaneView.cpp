@@ -10,6 +10,8 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
     }
     std::fill(qdc.x.begin(), qdc.x.end(), -999);
     std::fill(qdc.y.begin(), qdc.y.end(), -999);
+    std::fill(hitTimestamps.x.begin(), hitTimestamps.x.end(), -999);
+    std::fill(hitTimestamps.y.begin(), hitTimestamps.y.end(), -999);
     clusterBegin.x = -1;
     clusterBegin.y = -1;
     clusterEnd.x = -1;
@@ -38,6 +40,18 @@ void SciFiPlaneView::fillQDC() {
         }
         else {
             qdc.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
+        }
+    }
+}
+
+void SciFiPlaneView::fillTimestamps() {
+    for (int i{begin}; i<end; ++i) {
+        int position = 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+        if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
+            hitTimestamps.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+        }
+        else {
+            hitTimestamps.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
         }
     }
 }
