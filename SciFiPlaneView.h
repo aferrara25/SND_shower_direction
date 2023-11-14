@@ -47,6 +47,7 @@ public:
   };
 
   xy_pair<std::array<double,512>> qdc;
+  xy_pair<std::array<double,512>> hitTimestamps;
   xy_pair<int> clusterBegin;
   xy_pair<int> clusterEnd;
 
@@ -54,6 +55,7 @@ public:
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
   auto sizes() const;
   void fillQDC();
+  void fillTimestamps();
   void findCluster();
 
   const int getStation() const;
