@@ -170,44 +170,34 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
 
 std::array<int, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
   std::array<int,2> centroid = {-1};
-  double maxSignalX{-1};
-  double maxSignalY{-1};
+  double maxSignal{-1};
   auto config = plane.getConfig();
+  for (int index{0}; index <2; ++index) {
+    for (int i{0}; i < config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize; ++i) {
+  
+      double signalSum{0};
 
-  for (int i{0}; i < config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize; ++i) {
-    double signalSumX{0};
-    double signalSumY{0};
-
-    for (int j{i}; j < (i+windowSize); ++j) {
-        double signalX = plane.qdc.x[j];
-        double signalY = plane.qdc.y[j];
-        int denX, denY = windowSize;
-        if ( signalX != -999 ){
-          signalSumX += signalX;
+      for (int j{i}; j < (i+windowSize); ++j) {
+        int den = windowSize;
+        double signal;
+        if (index == 0) signal = plane.qdc.x[j];
+        else signal = plane.qdc.y[j];
+        
+        if ( signal != -999 ){
+          signalSum += signal;
         } else {
-          denX -=1;
+          den -=1;
         }
 
-        if ( signalY != -999 ){
-          signalSumY += signalY; 
-        } else {
-          denY -=1;
-        }
         if (j == i+windowSize-1) {
-          double ratioX =  signalSumX/denX;
-          if ( maxSignalX < ratioX ) {
-            maxSignalX = ratioX;
-            centroid[0] = i;
-          }
-
-          double ratioY = signalSumY/denY;
-          if ( maxSignalY < ratioY ) {
-            maxSignalY = ratioY;
-            centroid[1] = i;
+          double ratio =  signalSum/den;
+          if ( maxSignal < ratio ) {
+            maxSignal = ratio;
+            centroid[index] = i;
           }
         }
+      }
     }
-
   }
 
   return centroid;
