@@ -47,10 +47,14 @@ public:
   };
 
   xy_pair<std::array<double,512>> qdc;
+  xy_pair<int> clusterBegin;
+  xy_pair<int> clusterEnd;
+
 
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
   auto sizes() const;
   void fillQDC();
+  void findCluster();
 
   const int getStation() const;
   const cfg getConfig() const;
