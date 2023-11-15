@@ -147,6 +147,7 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
     auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
     plane.fillQDC();
+    plane.fillTimestamps();
     scifi_planes.emplace_back(plane);
   }
 
@@ -196,7 +197,7 @@ std::array<double, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
       }
     }
   }
-
+  plane.setCentroid(centroid);
   return centroid;
 }
 
@@ -205,21 +206,40 @@ std::array<double, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
 
 bool hitCut (std::vector<SciFiPlaneView> detector){
   for (auto plane : detector){
-    
     if (plane.getStation() == 1 && (plane.sizes().x != 1 || plane.sizes().y !=1 ) ) return false;
     else if (plane.getStation() > 1){
       int thr = plane.getConfig().SCIFITHRESHOLD;
-      if (plane.sizes().x < thr || plane.sizes().y < thr) return false;
+      if (plane.sizes().x > thr && plane.sizes().y > thr) return true;
     }
   }
-  return true;
+  // if I finish the for loop without finding a plane above threshold return false
+  return false;
 }
 
+void timeCut (std::vector<SciFiPlaneView> detector) {
+  double referenceTime{-1};
+  for (auto plane : detector) {
+    cfg config = plane.getConfig();
+    int station = plane.getStation();
+    std::array<double, 512> timeArrayX = plane.hitTimestamps.x;
+    std::array<double, 512> timeArrayY = plane.hitTimestamps.y;
+    if (station == 1) {
+      if ( std::count_if(timeArrayX.begin(), timeArrayX.end(), [] (double t) {return t > -999;} ) == 1 &&
+           std::count_if(timeArrayY.begin(), timeArrayY.end(), [] (double t) {return t > -999;} ) == 1) {
+            double timeX = *std::max_element(timeArrayX.begin(), timeArrayX.end());
+            double timeY = *std::max_element(timeArrayY.begin(), timeArrayY.end());
+            if (std::abs(timeX - timeY) < 1) referenceTime = timeX;
+           }
+    }
+    else {
+      for (int i{0}; i < 512; ++i) {
+        if ( (timeArrayX[i] - referenceTime) > config.TIMECUT) plane.resetHit(false, i); //lo cancello 
+        if ( (timeArrayY[i] - referenceTime) > config.TIMECUT) plane.resetHit(true, i); //lo cancello 
 
-/*bool timeCut (std::vector<SciFiPlaneView> detector) {
-  if ()
-  double referenceTime 
-}*/
+      }
+    }
+  }
+}
 
 void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
 {
@@ -233,6 +253,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   
   // ##################### Read file #####################
   //int runNumber{100633};  
+  // 100631: pion 100 GeV 3 walls file
   // 100633: pion 140 GeV 3 walls file
   // 100635: pion 180 GeV 3 walls file
   // 100637: pion 240 GeV 3 walls file
@@ -281,6 +302,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
     if ( !hitCut(scifi_planes) ) continue;
+    timeCut(scifi_planes);
 
     int showerStart = checkShower(scifi_planes);
     plots["ShowerStart"]->Fill(showerStart);

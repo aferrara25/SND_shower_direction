@@ -50,6 +50,7 @@ public:
   xy_pair<std::array<double,512>> hitTimestamps;
   xy_pair<int> clusterBegin;
   xy_pair<int> clusterEnd;
+  xy_pair<double> centroid;
 
 
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
@@ -57,11 +58,14 @@ public:
   void fillQDC();
   void fillTimestamps();
   void findCluster();
+  void resetHit( bool isVertical, int index);
+  void setCentroid( std::array<double, 2> centroidCoordinates);
 
   const int getStation() const;
   const cfg getConfig() const;
   const int getBegin() const;
   const int getEnd() const;
+  const std::array<double, 2> getCentroid() const;
 
 };
 #endif

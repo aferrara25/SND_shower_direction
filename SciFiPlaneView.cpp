@@ -1,21 +1,23 @@
 #include "SciFiPlaneView.h"
 #include <stdexcept>
 
-
+const double DEFAULT = -999.0;
 
 SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
                 int s) : config(c), sf_hits(h), begin(b), end(e), station(s) {
     if (b > e) {
         throw std::runtime_error{"Begin index > end index"};
     }
-    std::fill(qdc.x.begin(), qdc.x.end(), -999);
-    std::fill(qdc.y.begin(), qdc.y.end(), -999);
-    std::fill(hitTimestamps.x.begin(), hitTimestamps.x.end(), -999);
-    std::fill(hitTimestamps.y.begin(), hitTimestamps.y.end(), -999);
+    std::fill(qdc.x.begin(), qdc.x.end(), DEFAULT);
+    std::fill(qdc.y.begin(), qdc.y.end(), DEFAULT);
+    std::fill(hitTimestamps.x.begin(), hitTimestamps.x.end(), DEFAULT);
+    std::fill(hitTimestamps.y.begin(), hitTimestamps.y.end(), DEFAULT);
     clusterBegin.x = -1;
     clusterBegin.y = -1;
     clusterEnd.x = -1;
     clusterEnd.y = -1;
+    centroid.x = -1;
+    centroid.y = -1;
 }
 
 
@@ -67,7 +69,7 @@ void SciFiPlaneView::findCluster() {
 
     // Loop on x
     for (int i = 0; i < qdc.x.size(); ++i) {
-        if (qdc.x[i] != -999) {
+        if (qdc.x[i] != DEFAULT) {
             // Inside a cluster
             if (currentStart == -1) {
                 currentStart = i;
@@ -110,7 +112,7 @@ void SciFiPlaneView::findCluster() {
     consecutiveGaps = 0;
 
     for (int i = 0; i < qdc.y.size(); ++i) {
-        if (qdc.y[i] != -999) {
+        if (qdc.y[i] != DEFAULT) {
             // Inside a cluster
             if (currentStart == -1) {
                 currentStart = i;
@@ -144,10 +146,40 @@ void SciFiPlaneView::findCluster() {
     }    
 }
 
+
+void SciFiPlaneView::resetHit( bool isVertical, int index){
+    if (isVertical) {
+        qdc.y[index] = DEFAULT;
+        hitTimestamps.y[index] = DEFAULT;
+    }
+    else {
+        qdc.x[index] = DEFAULT;
+        hitTimestamps.x[index] = DEFAULT;
+    }
+}
+
+void SciFiPlaneView::setCentroid( std::array<double, 2> centroidCoordinates) {
+    centroid.x = centroidCoordinates[0];
+    centroid.y = centroidCoordinates[1];
+}
+
 const int SciFiPlaneView::getStation() const {
     return station;
 }
 
 const cfg SciFiPlaneView::getConfig() const {
     return config;
+}
+
+const int SciFiPlaneView::getBegin() const {
+    return begin;
+}
+
+const int SciFiPlaneView::getEnd() const {
+    return end;
+}
+
+const std::array<double, 2> SciFiPlaneView::getCentroid() const{
+    std::array<double, 2>  c =  {centroid.x, centroid.y};
+    return c;
 }
