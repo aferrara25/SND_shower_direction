@@ -2,6 +2,13 @@
 #include <stdexcept>
 
 const double DEFAULT = -999.0;
+const double FREQ{160.316E6};
+const double TDC2ns = 1E9/FREQ;
+const int NSIPM{8};
+const int NSIDE{2};
+const int NsidesNch{16};
+const int TOFPETperBOARD{8};
+const int TOFPETCHANNELS{64};
 
 SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
                 int s) : config(c), sf_hits(h), begin(b), end(e), station(s) {
@@ -143,7 +150,20 @@ void SciFiPlaneView::findCluster() {
     if (maxLength>=config.SCIFITHRESHOLD) {
         clusterBegin.y = longestStart;
         clusterEnd.y = longestEnd;
-    }    
+    }
+
+    // Set values outside cluster to default
+    if (clusterBegin.x != -1 && clusterBegin.y != -1) {
+        std::fill(hitTimestamps.x.begin(), hitTimestamps.x.begin() + clusterBegin.x, DEFAULT);   
+        std::fill(hitTimestamps.x.begin() + clusterEnd.x + 1, hitTimestamps.x.end(), DEFAULT);
+        std::fill(hitTimestamps.y.begin(), hitTimestamps.y.begin() + clusterBegin.y, DEFAULT);
+        std::fill(hitTimestamps.y.begin() + clusterEnd.y + 1, hitTimestamps.y.end(), DEFAULT);
+
+        std::fill(qdc.x.begin(), qdc.x.begin() + clusterBegin.x, DEFAULT);   
+        std::fill(qdc.x.begin() + clusterEnd.x + 1, qdc.x.end(), DEFAULT);
+        std::fill(qdc.y.begin(), qdc.y.begin() + clusterBegin.y, DEFAULT);
+        std::fill(qdc.y.begin() + clusterEnd.y + 1, qdc.y.end(), DEFAULT);
+    }
 }
 
 void SciFiPlaneView::findCentroid(int windowSize) {

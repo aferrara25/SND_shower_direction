@@ -58,6 +58,7 @@ public:
   void fillQDC();
   void fillTimestamps();
   void findCluster();
+  void findCentroid(int windowSize);
   void resetHit( bool isVertical, int index);
   void setCentroid( std::array<double, 2> centroidCoordinates);
 

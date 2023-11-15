@@ -5,14 +5,6 @@
 #include "Inclusion.h"
 #include "SciFiPlaneView.h"
 
-const double FREQ{160.316E6};
-const double TDC2ns = 1E9/FREQ;
-const int NSIPM{8};
-const int NSIDE{2};
-const int NsidesNch{16};
-const int TOFPETperBOARD{8};
-const int TOFPETCHANNELS{64};
-
 cfg setCfg( bool istb ) {
   cfg config;
   if (istb) {
@@ -51,14 +43,14 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
   for (auto tag : tags) {
 
     const auto t{tag.c_str()};
-    m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("ShowerStart; station; entries", t), 5, 0.5, 5.5);
+    m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
     m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (ns) ; entries", t), 150, -5, 145);
     m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
     for (int st = 0; st < configuration.SCIFISTATION; ++st){
-      m_plots[Form("%s_HitsperStation_st%dX", st)] = new TH1D (Form("HitsperStation_%d", st), Form("HitsperStation_%dX;n hit in event;entries", st+1), 500, 0, 500);
-      m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13, 135, -0.5, 13);
-      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; x (cm); entries", t, st), 135, -.5, 13, 135, -0.5, 13);
+      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%d", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st+1), 500, 0, 500);
+      m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
+      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; x (cm); entries", t, st), 135, -.5, 13);
       m_plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
       m_plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
       m_plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st+1), 10, 0, 10);
@@ -209,10 +201,11 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     timeCut(scifi_planes);
 
     int showerStart = checkShower(scifi_planes);
-    plots["ShowerStart"]->Fill(showerStart);
+    plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
     for (auto plane : scifi_planes){
-      auto centroid = findCentroid(plane, 6);
-      plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
+      plane.findCentroid(6);
+      auto centroid = plane.getCentroid();
+      plots[Form("%s_Centroid_Position_st%d", tags[1].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
       //std::cout << "in station: " << plane.getStation() << " centroid x: " << centroid[0] << "  ||     centroid y: " << centroid[1] << std::endl; 
     }
   }
