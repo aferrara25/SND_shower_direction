@@ -104,44 +104,6 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
   return -1;
 }
 
-std::array<double, 2> findCentroid(SciFiPlaneView plane, int windowSize) {
-  // find shower centroid position in cm
-  std::array<double,2> centroid = {-1, -1};
-   
-  double maxSignal{0};
-  auto config = plane.getConfig();
-  for (int index{0}; index <2; ++index) {
-    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {
-  
-      double signalSum{0};
-
-      for (int j{i}; j < (i+windowSize); ++j) {
-        int den = windowSize;
-        double signal;
-        if (index == 0) signal = plane.qdc.x[j];
-        else signal = plane.qdc.y[j];
-        
-        if ( signal != -999 ){
-          signalSum += signal;
-        } else {
-          den -=1;
-        }
-
-        if (j == i+windowSize-1) {
-          if (den < 2) continue;
-          double ratio =  signalSum/den;
-          if ( maxSignal < ratio ) {
-            maxSignal = ratio;
-            centroid[index] = (i+(windowSize*.5)) *.025;    // conversion in cm
-          }
-        }
-      }
-    }
-  }
-  plane.setCentroid(centroid);
-  return centroid;
-}
-
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 

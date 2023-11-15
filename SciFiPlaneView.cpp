@@ -146,6 +146,42 @@ void SciFiPlaneView::findCluster() {
     }    
 }
 
+void SciFiPlaneView::findCentroid(int windowSize) {
+  std::array<double, 2> centroidCoordinates;
+  // find shower centroid position in cm   
+  double maxSignal{0};
+  for (int index{0}; index <2; ++index) {
+    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {
+  
+      double signalSum{0};
+
+      for (int j{i}; j < (i+windowSize); ++j) {
+        int den = windowSize;
+        double signal;
+        if (index == 0) signal = qdc.x[j];
+        else signal = qdc.y[j];
+        
+        if ( signal != -999 ){
+          signalSum += signal;
+        } else {
+          den -=1;
+        }
+
+        if (j == i+windowSize-1) {
+          if (den < 2) continue;
+          double ratio =  signalSum/den;
+          if ( maxSignal < ratio ) {
+            maxSignal = ratio;
+            centroidCoordinates[index] = (i+(windowSize*.5)) *.025;    // conversion in cm
+          }
+        }
+      }
+    }
+  }
+  centroid.x = centroidCoordinates[0];
+  centroid.y = centroidCoordinates[1];
+}
+
 
 void SciFiPlaneView::resetHit( bool isVertical, int index){
     if (isVertical) {
