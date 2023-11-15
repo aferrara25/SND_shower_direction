@@ -48,9 +48,10 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
     m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
     for (int st = 0; st < configuration.SCIFISTATION; ++st){
-      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%d", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st+1), 500, 0, 500);
+      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st+1), 512, 0, 512);
+      m_plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st+1), 512, 0, 512);
       m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
-      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; x (cm); entries", t, st), 135, -.5, 13);
+      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), 135, -.5, 13);
       m_plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
       m_plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
       m_plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st+1), 10, 0, 10);
@@ -197,17 +198,58 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     if (sf_max < 15 && mu_max < 3 ) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
+    //Before cut
+    int showerStart = checkShower(scifi_planes);
+    plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
+    for (auto plane : scifi_planes){
+      plane.findCentroid(6);
+      auto centroid = plane.getCentroid();
+      plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
+      auto nhits = plane.sizes();
+      plots[Form("%s_HitsperStation_st%dX", tags[0].c_str(), plane.getStation()-1)]->Fill(nhits.x);
+      plots[Form("%s_HitsperStation_st%dY", tags[0].c_str(), plane.getStation()-1)]->Fill(nhits.y);
+      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
+        if (plane.qdc.x[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dX", tags[0].c_str(), plane.getStation()-1)]->Fill(plane.qdc.x[i]);
+          plots[Form("%s_Position_st%dX", tags[0].c_str(), plane.getStation()-1)]->Fill(i*0.025);
+        }
+        if (plane.qdc.y[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dY", tags[0].c_str(), plane.getStation()-1)]->Fill(plane.qdc.y[i]);
+          plots[Form("%s_Position_st%dY", tags[0].c_str(), plane.getStation()-1)]->Fill(i*0.025);
+        }
+      }
+      //std::cout << "in station: " << plane.getStation() << " centroid x: " << centroid[0] << "  ||     centroid y: " << centroid[1] << std::endl; 
+    }
+
+
+    //After cut
     if ( !hitCut(scifi_planes) ) continue;
     timeCut(scifi_planes);
+    showerStart = checkShower(scifi_planes);
 
-    int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
     for (auto plane : scifi_planes){
       plane.findCentroid(6);
       auto centroid = plane.getCentroid();
       plots[Form("%s_Centroid_Position_st%d", tags[1].c_str(), plane.getStation()-1)]->Fill(centroid[0], centroid[1]);
+      int nhitsX = plane.qdc.x.size() - std::count(plane.qdc.x.begin(), plane.qdc.x.end(), DEFAULT);
+      int nhitsY = plane.qdc.y.size() - std::count(plane.qdc.y.begin(), plane.qdc.y.end(), DEFAULT);
+      plots[Form("%s_HitsperStation_st%dX", tags[1].c_str(), plane.getStation()-1)]->Fill(nhitsX);
+      plots[Form("%s_HitsperStation_st%dY", tags[1].c_str(), plane.getStation()-1)]->Fill(nhitsY);
+      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
+        if (plane.qdc.x[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dX", tags[1].c_str(), plane.getStation()-1)]->Fill(plane.qdc.x[i]);
+          plots[Form("%s_Position_st%dX", tags[1].c_str(), plane.getStation()-1)]->Fill(i*0.025);
+        }
+        if (plane.qdc.y[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dY", tags[1].c_str(), plane.getStation()-1)]->Fill(plane.qdc.y[i]);
+          plots[Form("%s_Position_st%dY", tags[1].c_str(), plane.getStation()-1)]->Fill(i*0.025);
+        }
+      }
       //std::cout << "in station: " << plane.getStation() << " centroid x: " << centroid[0] << "  ||     centroid y: " << centroid[1] << std::endl; 
     }
+
+    //After cluster
   }
 
   auto stop = std::chrono::system_clock::now();
