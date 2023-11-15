@@ -47,83 +47,24 @@ cfg setCfg( bool istb ) {
 
 
 void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
-  m_plots["histo"] = new TH2F("histo", "; # scifi hits; # mu hits", 100, 0, 100, 100, 0, 100);
-
-  // events characteristics plots
-  m_plots["ShowerStart"] = new TH1D("ShowerStart", "ShowerStart; station; entries", 7, -2, 5);
-  m_plots["TimeCut_ShowerStart"] = new TH1D("TimeCut_ShowerStart", "TimeCut_ShowerStart; station; entries", 7, -2, 5);
-  // together x and y
-  // SPOSTA IN %s
-  for (int st = 0; st < configuration.SCIFISTATION; ++st){
-    m_plots[Form("HitDistribution_st%d", st)] = new TH2D (Form("HitDistribution_st%d", st), Form("HitDistribution_st%d; n hit %dX; n hit %dY", st+1, st+1, st+1), 275, 0, 550, 275, 0, 550);
-    m_plots[Form("TimeCut_HitDistribution_st%d", st)] = new TH2D (Form("TimeCut_HitDistribution_st%d", st), Form("TimeCut_HitDistribution_st%d; n hit %dX; n hit %dY", st+1, st+1, st+1), 275, 0, 550, 275, 0, 550);
-  }
-  // separately x and y 
-  for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
-    m_plots[Form("HitsperStation_%d", st)] = new TH1D (Form("HitsperStation_%d", st), Form("HitsperStation_%dX;station;entries", st+1), 500, 0, 500);
-    m_plots[Form("TimeCut_HitsperStation_%d", st)] = new TH1D (Form("TimeCut_HitsperStation_%d", st), Form("TimeCut_HitsperStation_%dX;station;entries", st+1), 500, 0, 500);
-    if (st>3) {
-      m_plots[Form("HitsperStation_%d", st)]->SetTitle(Form("HitsperStation_%dY", st-3));
-      m_plots[Form("TimeCut_HitsperStation_%d", st)]->SetTitle(Form("TimeCut_HitsperStation_%dY", st-3));
-    }
-
-  }
- 
-  //basic quantities plots for scifi and mu 
+  
   for (auto tag : tags) {
+
+    const auto t{tag.c_str()};
+    m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("ShowerStart; station; entries", t), 5, 0.5, 5.5);
+    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (ns) ; entries", t), 150, -5, 145);
+    m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
-    //SCIFI plots
-    if (tag == "Scifi"){
-      const auto t{tag.c_str()};
-      m_plots[Form("%s_times", t)] = new TH1D(Form("%s_times", t), Form("%s_times; time (ns) ; entries", t), 150, -5, 145);
-      m_plots[Form("%s_signals", t)] = new TH1D(Form("%s_signals", t), Form("%s_signals; qdc? ; entries", t), 100, -30, 80);
-      m_plots[Form("%s_channels", t)] = new TH1D(Form("%s_channels", t), Form("%s_channels; n channel; entries", t), 100, 0, 100);
-      m_plots[Form("%s_charge", t)] = new TH1D(Form("%s_charge", t), Form("%s_charge; qdc?; entries", t), 200, 0, 200);
-      m_plots[Form("%s_station", t)] = new TH1D(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
-      m_plots[Form("%s_tofpet", t)] = new TH1D(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 10, 0, 10);
-      m_plots[Form("%s_boardID", t)] = new TH1D(Form("%s_boardID", t), Form("%s_boardID; board number; entries", t), 100, 0, 100);
-      
-      for (int st = 0; st < configuration.SCIFISTATION; ++st){
-        m_plots[Form("%s_Xposition_st%d", t, st)] = new TH1D(Form("%s_Xposition_st%d", t, st), Form("%s_Xposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-        m_plots[Form("%s_Yposition_st%d", t, st)] = new TH1D(Form("%s_Yposition_st%d", t, st), Form("%s_Yposition_st%d; x (cm); entries", t, st), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-        m_plots[Form("%s_TimeCut_signals_st%d", t, st)] = new TH1D(Form("%s_TimeCut_signals_st%d", t, st), Form("%s_TimeCut_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
-        m_plots[Form("%s_signals_st%d", t, st)] = new TH1D(Form("%s_signals_st%d", t, st), Form("%s_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 80);
-        m_plots[Form("%s_tofpet_st%d", t, st)] = new TH1D(Form("%s_tofpet_st%d", t, st), Form("%s_tofpet_st%d; tofpet number; entries", t, st+1), 10, 0, 10);
-        m_plots[Form("%s_TimeCut_Xposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Xposition_st%d", t, st), Form("%s_TimeCut_Xposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-        m_plots[Form("%s_TimeCut_Yposition_st%d", t, st)] = new TH1D(Form("%s_TimeCut_Yposition_st%d", t, st), Form("%s_TimeCut_Yposition_st%d; n channel; entries", t, st+1), configuration.SCIFIDIM+2, -1, configuration.SCIFIDIM+1);
-        m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st+1), 513, -0.5*.025, 512.5*.025, 513, -0.5*.025, 512.5*.025);
-      }
-
-      for (int st = 0; st < 2*configuration.SCIFISTATION; ++st){
-        m_plots[Form("%s_channels_st%d", t, st)] = new TH1D(Form("%s_channels_st%d", t, st), Form("%s_channels_st%dX; n channel; entries", t ,st+1), 514, -0.5, 512.5);
-        m_plots[Form("%s_TimeCut_channels_st%d", t, st)] = new TH1D(Form("%s_TimeCut_channels_st%d", t, st), Form("%s_TimeCut_channels_st%dX; n channel; entries", t ,st+1), 513, -0.5, 512.5);   
-        m_plots[Form("%s_Shower_TimeCut_channels_st%d", t, st)] = new TH1D(Form("%s_Shower_TimeCut_channels_st%d", t, st), Form("%s_Shower_TimeCut_channels_st%dX; n channel; entries", t ,st+1), 513
-        , -0.5, 512.5);          
-        if (st>3) {
-          m_plots[Form("%s_channels_st%d", t, st)]->SetTitle(Form("%s_channels_st%dY", t, st-3));
-          m_plots[Form("%s_TimeCut_channels_st%d", t, st)]->SetTitle(Form("%s_TimeCut_channels_st%dY", t, st-3));    
-          m_plots[Form("%s_Shower_TimeCut_channels_st%d", t, st)]->SetTitle(Form("%s_Shower_TimeCut_channels_st%dY", t, st-3));
-        }  
-      }
-    }
-
-    //Muon plots
-    else if ( tag == "MuFilter") {
-
-      const auto t{tag.c_str()};
-      m_plots[Form("%s_times", t)] = new TH1D(Form("%s_times", t), Form("%s_times; time (ns) ; entries", t), 150, -5, 145);
-      m_plots[Form("%s_signals", t)] = new TH1D(Form("%s_signals", t), Form("%s_signals; qdc? ; entries", t), 100, -30, 80);
-      m_plots[Form("%s_channels", t)] = new TH1D(Form("%s_channels", t), Form("%s_channels; n channel; entries", t), 100, 0, 100);
-      m_plots[Form("%s_charge", t)] = new TH1D(Form("%s_charge", t), Form("%s_charge; qdc?; entries", t), 200, 0, 200);
-      m_plots[Form("%s_station", t)] = new TH1D(Form("%s_station", t), Form("%s_station; station ; entries", t), 6, -0.5, 5.5);
-      m_plots[Form("%s_tofpet", t)] = new TH1D(Form("%s_tofpet", t), Form("%s_tofpet; tofpet number; entries", t), 10, 0, 10);
-      m_plots[Form("%s_boardID", t)] = new TH1D(Form("%s_boardID", t), Form("%s_boardID; board number; entries", t), 100, 0, 100);
-      
-      for (int st = 0; st < configuration.MUSTATION; ++st){
-
-      m_plots[Form("%s_signals_st%d", t, st)] = new TH1D(Form("%s_signals_st%d", t, st), Form("%s_signals_st%d; qdc? ; entries", t, st+1), 100, -30, 1000);
-
-      }
+    for (int st = 0; st < configuration.SCIFISTATION; ++st){
+      m_plots[Form("%s_HitsperStation_st%dX", st)] = new TH1D (Form("HitsperStation_%d", st), Form("HitsperStation_%dX;n hit in event;entries", st+1), 500, 0, 500);
+      m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13, 135, -0.5, 13);
+      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; x (cm); entries", t, st), 135, -.5, 13, 135, -0.5, 13);
+      m_plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
+      m_plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st+1), 100, -30, 80);
+      m_plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st+1), 10, 0, 10);
+      m_plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st+1), 10, 0, 10);
+      m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st+1), 513, -0.5*.025, 512.5*.025, 513, -0.5*.025, 512.5*.025);
+      m_plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st+1, st+1, st+1), 135, -.5, 13, 135, -0.5, 13);
     }
   }
 }
@@ -271,8 +212,9 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   std::map<std::string, double> counters;
   std::map<std::string, TH1*> plots;
   std::vector<std::string> tags;
-  tags.push_back("Scifi");
-  tags.push_back("MuFilter");
+  tags.push_back("NoCut");
+  tags.push_back("Cut");
+  tags.push_back("Cluster");
 
 
   definePlots(configuration, plots, counters, tags);
