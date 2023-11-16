@@ -10,6 +10,7 @@ const int NsidesNch{16};
 const int TOFPETperBOARD{8};
 const int TOFPETCHANNELS{64};
 
+
 SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
                 int s) : config(c), sf_hits(h), begin(b), end(e), station(s) {
     if (b > e) {
@@ -25,19 +26,17 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
     clusterEnd.y = -1;
     centroid.x = -1;
     centroid.y = -1;
+    fillQDC();
+    fillTimestamps();
 }
 
 
 auto SciFiPlaneView::sizes() const{
     xy_pair<int> counts{0, 0};
 
-    for (int i{begin}; i < end; ++i) {
-      if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
-        ++counts.y;
-      } else {
-        ++counts.x;
-      }
-    }
+    counts.x = std::count_if(qdc.x.begin(), qdc.x.end(), [] (double t) {return t > DEFAULT;});
+    counts.y = std::count_if(qdc.y.begin(), qdc.y.end(), [] (double t) {return t > DEFAULT;});
+
     return counts;
 }
 
@@ -214,11 +213,6 @@ void SciFiPlaneView::resetHit( bool isVertical, int index){
     }
 }
 
-void SciFiPlaneView::setCentroid( std::array<double, 2> centroidCoordinates) {
-    centroid.x = centroidCoordinates[0];
-    centroid.y = centroidCoordinates[1];
-}
-
 const int SciFiPlaneView::getStation() const {
     return station;
 }
@@ -235,7 +229,17 @@ const int SciFiPlaneView::getEnd() const {
     return end;
 }
 
-const std::array<double, 2> SciFiPlaneView::getCentroid() const{
-    std::array<double, 2>  c =  {centroid.x, centroid.y};
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroid() const{
+    xy_pair<double> c{centroid.x, centroid.y};
     return c;
+}
+
+const SciFiPlaneView::xy_pair<std::array<double, 512>> SciFiPlaneView::getTime() const{
+    xy_pair<std::array<double, 512>> time{hitTimestamps.x, hitTimestamps.y};
+    return time;
+}
+
+const SciFiPlaneView::xy_pair<std::array<double, 512>> SciFiPlaneView::getQDC() const{
+    xy_pair<std::array<double, 512>> charge{qdc.x, qdc.y};
+    return charge;
 }

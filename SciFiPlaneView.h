@@ -33,6 +33,34 @@ struct cfg
 
 class SciFiPlaneView {
 
+public:
+  template <class T> struct xy_pair {
+    T x{};
+    T y{};
+  };
+
+  SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
+  auto sizes() const;
+
+  const int getStation() const;
+  const cfg getConfig() const;
+  const int getBegin() const;
+  const int getEnd() const;
+  const xy_pair<double> getCentroid() const;
+  const xy_pair<std::array<double, 512>> getTime() const;
+  const xy_pair<std::array<double, 512>> getQDC() const;
+
+  void findCluster();
+  void findCentroid(int windowSize);
+  void resetHit(bool isVertical, int index);
+
+private:
+  xy_pair<std::array<double,512>> qdc;
+  xy_pair<std::array<double,512>> hitTimestamps;
+  xy_pair<int> clusterBegin;
+  xy_pair<int> clusterEnd;
+  xy_pair<double> centroid;
+
   int begin{};
   int end{};
   int station{};
@@ -40,33 +68,14 @@ class SciFiPlaneView {
   TClonesArray *sf_hits{nullptr};
   cfg config;
 
-public:
-  template <class T> struct xy_pair {
-    T x{};
-    T y{};
-  };
-
-  xy_pair<std::array<double,512>> qdc;
-  xy_pair<std::array<double,512>> hitTimestamps;
-  xy_pair<int> clusterBegin;
-  xy_pair<int> clusterEnd;
-  xy_pair<double> centroid;
-
-
-  SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
-  auto sizes() const;
   void fillQDC();
   void fillTimestamps();
-  void findCluster();
-  void findCentroid(int windowSize);
-  void resetHit( bool isVertical, int index);
-  void setCentroid( std::array<double, 2> centroidCoordinates);
 
-  const int getStation() const;
-  const cfg getConfig() const;
-  const int getBegin() const;
-  const int getEnd() const;
-  const std::array<double, 2> getCentroid() const;
+
+
+
+  
+
 
 };
 #endif

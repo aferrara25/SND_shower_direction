@@ -68,26 +68,31 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
 
 void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t) {
   for (auto plane : detector){
+    //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
     auto centroid = plane.getCentroid();
-    plots[Form("%s_Centroid_Position_st%d", t.c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
+    plots[Form("%s_Centroid_Position_st%d", t.c_str(), plane.getStation())]->Fill(centroid.x, centroid.y);
     
-    int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
-    int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
+    int nhitsX{plane.sizes().x};
+    int nhitsY{plane.sizes().y};
+    std::array<double, 512> timeX{plane.getTime().x};
+    std::array<double, 512> timeY{plane.getTime().y};
+    std::array<double, 512> qdcX{plane.getQDC().x};
+    std::array<double, 512> qdcY{plane.getQDC().y};
 
     plots[Form("%s_Station", t.c_str())]->Fill(plane.getStation(), nhitsX + nhitsY);
     plots[Form("%s_HitsperStation_st%dX", t.c_str(), plane.getStation())]->Fill(nhitsX);
     plots[Form("%s_HitsperStation_st%dY", t.c_str(), plane.getStation())]->Fill(nhitsY);
     plots[Form("%s_HitDistribution_st%d", t.c_str(), plane.getStation())]->Fill(nhitsX, nhitsY);
-    for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
-      if (plane.qdc.x[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dX", t.c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
-        plots[Form("%s_Times", t.c_str())]->Fill(plane.hitTimestamps.x[i]);
+    for (int i{0}; i<512; ++i) {
+      if (qdcX[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dX", t.c_str(), plane.getStation())]->Fill(qdcX[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
         plots[Form("%s_Position_st%dX", t.c_str(), plane.getStation())]->Fill(i*0.025);
         plots[Form("%s_Tofpet_st%dX", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
       }
-      if (plane.qdc.y[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dY", t.c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
-        plots[Form("%s_Times", t.c_str())]->Fill(plane.hitTimestamps.y[i]);
+      if (qdcY[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dY", t.c_str(), plane.getStation())]->Fill(qdcY[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(timeY[i]);
         plots[Form("%s_Position_st%dY", t.c_str(), plane.getStation())]->Fill(i*0.025);
         plots[Form("%s_Tofpet_st%dY", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
       }
@@ -112,8 +117,8 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
     }
 
     auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
-    plane.fillQDC();
-    plane.fillTimestamps();
+//    plane.fillQDC();
+//    plane.fillTimestamps();
     scifi_planes.emplace_back(plane);
   }
 
@@ -149,8 +154,8 @@ void timeCut (std::vector<SciFiPlaneView> &detector) {
   for (auto &plane : detector) {
     cfg config = plane.getConfig();
     int station = plane.getStation();
-    std::array<double, 512> timeArrayX = plane.hitTimestamps.x;
-    std::array<double, 512> timeArrayY = plane.hitTimestamps.y;
+    std::array<double, 512> timeArrayX{plane.getTime().x};
+    std::array<double, 512> timeArrayY{plane.getTime().y};
     if (station == 1) {
       if ( std::count_if(timeArrayX.begin(), timeArrayX.end(), [] (double t) {return t > DEFAULT;} ) == 1 &&
            std::count_if(timeArrayY.begin(), timeArrayY.end(), [] (double t) {return t > DEFAULT;} ) == 1) {
