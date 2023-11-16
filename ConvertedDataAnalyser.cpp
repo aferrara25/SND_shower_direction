@@ -66,7 +66,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
 }
 
 
-void fillPlots (std::vector<SciFiPlaneView> detector, std::map<std::string, TH1*> &plots, std::string &t) {
+void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t) {
   for (auto plane : detector){
     auto centroid = plane.getCentroid();
     plots[Form("%s_Centroid_Position_st%d", t.c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
@@ -132,8 +132,8 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
-bool hitCut (std::vector<SciFiPlaneView> detector){
-  for (auto plane : detector){
+bool hitCut (std::vector<SciFiPlaneView> &detector){
+  for (auto &plane : detector){
     if (plane.getStation() == 1 && (plane.sizes().x != 1 || plane.sizes().y !=1 ) ) return false;
     else if (plane.getStation() > 1){
       int thr = plane.getConfig().SCIFITHRESHOLD;
@@ -144,9 +144,9 @@ bool hitCut (std::vector<SciFiPlaneView> detector){
   return false;
 }
 
-void timeCut (std::vector<SciFiPlaneView> detector) {
+void timeCut (std::vector<SciFiPlaneView> &detector) {
   double referenceTime{-1};
-  for (auto plane : detector) {
+  for (auto &plane : detector) {
     cfg config = plane.getConfig();
     int station = plane.getStation();
     std::array<double, 512> timeArrayX = plane.hitTimestamps.x;
@@ -234,7 +234,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     //Before cut
     int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
-    for (auto plane : scifi_planes)  plane.findCentroid(6);
+    for (auto &plane : scifi_planes)  plane.findCentroid(6);
     fillPlots(scifi_planes, plots, tags[0]);
 
     //After cut
@@ -243,11 +243,11 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
-    for (auto plane : scifi_planes) plane.findCentroid(6);
+    for (auto &plane : scifi_planes) plane.findCentroid(6);
     fillPlots(scifi_planes, plots, tags[1]);
     
     //After cluster
-    for (auto plane : scifi_planes){
+    for (auto &plane : scifi_planes){
       plane.findCluster();
       plane.findCentroid(6);
     }
