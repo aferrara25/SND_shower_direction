@@ -65,6 +65,30 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
 }
 
 
+void fillPlots (std::vector<SciFiPlaneView> detector, std::map<std::string, TH1*> &plots, std::string &t) {
+  for (auto plane : detector){
+    auto centroid = plane.getCentroid();
+    plots[Form("%s_Centroid_Position_st%d", t.c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
+    
+    int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
+    int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
+
+    plots[Form("%s_HitsperStation_st%dX", t.c_str(), plane.getStation())]->Fill(nhitsX);
+    plots[Form("%s_HitsperStation_st%dY", t.c_str(), plane.getStation())]->Fill(nhitsY);
+    plots[Form("%s_HitDistribution_st%d", t.c_str(), plane.getStation())]->Fill(nhitsX, nhitsY);
+    for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
+      if (plane.qdc.x[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dX", t.c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
+        plots[Form("%s_Position_st%dX", t.c_str(), plane.getStation())]->Fill(i*0.025);
+      }
+      if (plane.qdc.y[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dY", t.c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
+        plots[Form("%s_Position_st%dY", t.c_str(), plane.getStation())]->Fill(i*0.025);
+      }
+    }
+  }
+}
+
 std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
   std::vector<SciFiPlaneView> scifi_planes;
@@ -200,29 +224,12 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     if (sf_max < 15 && mu_max < 3 ) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
+
     //Before cut
     int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
-    for (auto plane : scifi_planes){
-      plane.findCentroid(6);
-      auto centroid = plane.getCentroid();
-      plots[Form("%s_Centroid_Position_st%d", tags[0].c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
-      auto nhits = plane.sizes();
-      plots[Form("%s_HitsperStation_st%dX", tags[0].c_str(), plane.getStation())]->Fill(nhits.x);
-      plots[Form("%s_HitsperStation_st%dY", tags[0].c_str(), plane.getStation())]->Fill(nhits.y);
-      plots[Form("%s_HitDistribution_st%d", tags[0].c_str(), plane.getStation())]->Fill(nhits.x, nhits.y);
-      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
-        if (plane.qdc.x[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dX", tags[0].c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
-          plots[Form("%s_Position_st%dX", tags[0].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-        if (plane.qdc.y[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dY", tags[0].c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
-          plots[Form("%s_Position_st%dY", tags[0].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-      }
-    }
-
+    for (auto plane : scifi_planes)  plane.findCentroid(6);
+    fillPlots(scifi_planes, plots, tags[0]);
 
     //After cut
     if ( !hitCut(scifi_planes) ) continue;
@@ -230,54 +237,20 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
-    for (auto plane : scifi_planes){
-      plane.findCentroid(6);
-      auto centroid = plane.getCentroid();
-      plots[Form("%s_Centroid_Position_st%d", tags[1].c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
-      int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
-      int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
-      plots[Form("%s_HitsperStation_st%dX", tags[1].c_str(), plane.getStation())]->Fill(nhitsX);
-      plots[Form("%s_HitsperStation_st%dY", tags[1].c_str(), plane.getStation())]->Fill(nhitsY);
-      plots[Form("%s_HitDistribution_st%d", tags[1].c_str(), plane.getStation())]->Fill(nhitsX, nhitsY);
-      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
-        if (plane.qdc.x[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dX", tags[1].c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
-          plots[Form("%s_Position_st%dX", tags[1].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-        if (plane.qdc.y[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dY", tags[1].c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
-          plots[Form("%s_Position_st%dY", tags[1].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-      } 
-    }
-
+    for (auto plane : scifi_planes) plane.findCentroid(6);
+    fillPlots(scifi_planes, plots, tags[1]);
+    
     //After cluster
     for (auto plane : scifi_planes){
       plane.findCluster();
       plane.findCentroid(6);
-      auto centroid = plane.getCentroid();
-      plots[Form("%s_Centroid_Position_st%d", tags[2].c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
-      int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
-      int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
-      plots[Form("%s_HitsperStation_st%dX", tags[2].c_str(), plane.getStation())]->Fill(nhitsX);
-      plots[Form("%s_HitsperStation_st%dY", tags[2].c_str(), plane.getStation())]->Fill(nhitsY);
-      plots[Form("%s_HitDistribution_st%d", tags[2].c_str(), plane.getStation())]->Fill(nhits.x, nhits.y);
-      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
-        if (plane.qdc.x[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dX", tags[2].c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
-          plots[Form("%s_Position_st%dX", tags[2].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-        if (plane.qdc.y[i] != DEFAULT) {
-          plots[Form("%s_Signals_st%dY", tags[2].c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
-          plots[Form("%s_Position_st%dY", tags[2].c_str(), plane.getStation())]->Fill(i*0.025);
-        }
-      }
     }
     showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
+    fillPlots(scifi_planes, plots, tags[2]);
     
   }
-
+  
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
   auto end = std::chrono::system_clock::to_time_t(stop);
