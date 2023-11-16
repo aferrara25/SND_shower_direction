@@ -39,6 +39,7 @@ cfg setCfg( bool istb ) {
 
 
 void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
+  int nChannels = configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; //512 for Test Beam
   
   for (auto tag : tags) {
 
@@ -50,16 +51,16 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
     
     //plot per station
     for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
-      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), 512, 0, 512);
-      m_plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), 512, 0, 512);
+      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
+      m_plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), nChannels, 0, nChannels);
       m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
       m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), 135, -.5, 13);
       m_plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st), 100, -30, 80);
       m_plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st), 100, -30, 80);
       m_plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), 10, 0, 10);
       m_plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
-      m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), 513, -0.5*.025, 512.5*.025, 513, -0.5*.025, 512.5*.025);
-      m_plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), 512, 0, 512, 512, 0, 512);
+      m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
+      m_plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
     }
   }
 }
@@ -73,17 +74,22 @@ void fillPlots (std::vector<SciFiPlaneView> detector, std::map<std::string, TH1*
     int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
     int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
 
+    plots[Form("%s_Station", t.c_str())]->Fill(plane.getStation(), nhitsX + nhitsY);
     plots[Form("%s_HitsperStation_st%dX", t.c_str(), plane.getStation())]->Fill(nhitsX);
     plots[Form("%s_HitsperStation_st%dY", t.c_str(), plane.getStation())]->Fill(nhitsY);
     plots[Form("%s_HitDistribution_st%d", t.c_str(), plane.getStation())]->Fill(nhitsX, nhitsY);
     for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
       if (plane.qdc.x[i] != DEFAULT) {
         plots[Form("%s_Signals_st%dX", t.c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(plane.hitTimestamps.x[i]);
         plots[Form("%s_Position_st%dX", t.c_str(), plane.getStation())]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dX", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
       }
       if (plane.qdc.y[i] != DEFAULT) {
         plots[Form("%s_Signals_st%dY", t.c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(plane.hitTimestamps.y[i]);
         plots[Form("%s_Position_st%dY", t.c_str(), plane.getStation())]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dY", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
       }
     }
   }
