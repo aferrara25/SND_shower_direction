@@ -252,6 +252,30 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
     }
 
     //After cluster
+    for (auto plane : scifi_planes){
+      plane.findCluster();
+      plane.findCentroid(6);
+      auto centroid = plane.getCentroid();
+      plots[Form("%s_Centroid_Position_st%d", tags[2].c_str(), plane.getStation())]->Fill(centroid[0], centroid[1]);
+      int nhitsX = std::count_if(plane.qdc.x.begin(), plane.qdc.x.end(), [] (double t) {return t > DEFAULT;});
+      int nhitsY = std::count_if(plane.qdc.y.begin(), plane.qdc.y.end(), [] (double t) {return t > DEFAULT;});
+      plots[Form("%s_HitsperStation_st%dX", tags[2].c_str(), plane.getStation())]->Fill(nhitsX);
+      plots[Form("%s_HitsperStation_st%dY", tags[2].c_str(), plane.getStation())]->Fill(nhitsY);
+      plots[Form("%s_HitDistribution_st%d", tags[2].c_str(), plane.getStation())]->Fill(nhits.x, nhits.y);
+      for (int i{0}; i<plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; ++i) {
+        if (plane.qdc.x[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dX", tags[2].c_str(), plane.getStation())]->Fill(plane.qdc.x[i]);
+          plots[Form("%s_Position_st%dX", tags[2].c_str(), plane.getStation())]->Fill(i*0.025);
+        }
+        if (plane.qdc.y[i] != DEFAULT) {
+          plots[Form("%s_Signals_st%dY", tags[2].c_str(), plane.getStation())]->Fill(plane.qdc.y[i]);
+          plots[Form("%s_Position_st%dY", tags[2].c_str(), plane.getStation())]->Fill(i*0.025);
+        }
+      }
+    }
+    showerStart = checkShower(scifi_planes);
+    plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
+    
   }
 
   auto stop = std::chrono::system_clock::now();
