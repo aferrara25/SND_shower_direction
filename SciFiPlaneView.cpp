@@ -26,7 +26,7 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s) :
 }
 
 
-auto SciFiPlaneView::sizes() const{
+const SciFiPlaneView::xy_pair<int> SciFiPlaneView::sizes() const{
     xy_pair<int> counts{0, 0};
 
     counts.x = std::count_if(qdc.x.begin(), qdc.x.end(), [] (double t) {return t > DEFAULT;});
@@ -156,6 +156,18 @@ void SciFiPlaneView::resetHit( bool isVertical, int index){
         hitTimestamps.x[index] = DEFAULT;
     }
 }
+
+void SciFiPlaneView::timeCut (double referenceTime) {
+
+    if (station == 1) return;
+    else {
+        for (int i{0}; i < 512; ++i) {
+        if ( (hitTimestamps.x[i] - referenceTime) > config.TIMECUT) resetHit(false, i); 
+        if ( (hitTimestamps.y[i] - referenceTime) > config.TIMECUT) resetHit(true, i);  
+        }
+    }
+}
+
 
 const int SciFiPlaneView::getStation() const {
     return station;

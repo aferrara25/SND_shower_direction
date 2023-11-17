@@ -3,6 +3,7 @@
 
 #include<vector>
 #include<array>
+#include<string>
 #include "TChain.h"
 #include "TClonesArray.h"
 
@@ -25,8 +26,8 @@ struct cfg
   //geometry parameters
   double SCIFIDIM{-1};
   
-  const char *INFILENAME;
-  const char *OUTFILENAME;
+  std::string INFILENAME;
+  std::string OUTFILENAME;
 };
 
 
@@ -40,8 +41,8 @@ public:
   };
 
   SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
-  auto sizes() const;
-
+  
+  const xy_pair<int> sizes() const;
   const int getStation() const;
   const cfg getConfig() const;
   const int getBegin() const;
@@ -52,6 +53,7 @@ public:
 
   void findCluster();
   void findCentroid(int windowSize);
+  void timeCut(double referenceTime);
   void resetHit(bool isVertical, int index);
 
 private:
@@ -70,12 +72,6 @@ private:
 
   void fillQDC();
   void fillTimestamps();
-
-
-
-
-  
-
 
 };
 #endif

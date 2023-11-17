@@ -46,7 +46,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
     const auto t{tag.c_str()};
     //plot per event
     m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
-    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 30, -5, 25);
+    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
     m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
     //plot per station
@@ -64,7 +64,6 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
     }
   }
 }
-
 
 void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t) {
   for (auto plane : detector){
@@ -151,25 +150,21 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
 
 void timeCut (std::vector<SciFiPlaneView> &detector) {
   double referenceTime{-1};
+
   for (auto &plane : detector) {
-    cfg config = plane.getConfig();
     int station = plane.getStation();
-    std::array<double, 512> timeArrayX{plane.getTime().x};
-    std::array<double, 512> timeArrayY{plane.getTime().y};
+    auto time = plane.getTime();
+    //first look for the reference time
     if (station == 1) {
-      if ( std::count_if(timeArrayX.begin(), timeArrayX.end(), [] (double t) {return t > DEFAULT;} ) == 1 &&
-           std::count_if(timeArrayY.begin(), timeArrayY.end(), [] (double t) {return t > DEFAULT;} ) == 1) {
-            double timeX = *std::max_element(timeArrayX.begin(), timeArrayX.end());
-            double timeY = *std::max_element(timeArrayY.begin(), timeArrayY.end());
+      if ( plane.sizes().x == 1 && plane.sizes().y == 1 ) {
+            double timeX = *std::max_element(time.x.begin(), time.x.end());
+            double timeY = *std::max_element(time.y.begin(), time.y.end());
             if (std::abs(timeX - timeY) < 1) referenceTime = timeX;
            }
     }
-    else {
-      for (int i{0}; i < 512; ++i) {
-        if ( (timeArrayX[i] - referenceTime) > config.TIMECUT) plane.resetHit(false, i); //lo cancello 
-        if ( (timeArrayY[i] - referenceTime) > config.TIMECUT) plane.resetHit(true, i); //lo cancello 
-
-      }
+    else if (station > 1){
+      if (referenceTime == -1) continue;
+      plane.timeCut(referenceTime);
     }
   }
 }
@@ -195,10 +190,10 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   auto *fEventTree = new TChain("rawConv");
   //for (int i = 0; i<3; ++i){
   for (int i = 0; i<nFiles; ++i){
-    fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME, runNumber, i)); 
+    fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, i)); 
   }
 
-  TFile outputFile(Form("%sRun_%d.root", configuration.OUTFILENAME, runNumber), "RECREATE"); 
+  TFile outputFile(Form("%sRun_%d.root", configuration.OUTFILENAME.c_str(), runNumber), "RECREATE"); 
   outputFile.cd();
 
   std::map<std::string, double> counters;
