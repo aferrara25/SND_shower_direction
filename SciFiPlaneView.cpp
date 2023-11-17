@@ -11,8 +11,9 @@ const int TOFPETperBOARD{8};
 const int TOFPETCHANNELS{64};
 
 
-SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
-                int s) : config(c), sf_hits(h), begin(b), end(e), station(s) {
+SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s) : 
+            config(c), sf_hits(h), begin(b), end(e), station(s), clusterBegin({-1,-1}), clusterEnd({-1,-1}), centroid({-1,-1}) 
+                {
     if (b > e) {
         throw std::runtime_error{"Begin index > end index"};
     }
@@ -20,12 +21,6 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e,
     std::fill(qdc.y.begin(), qdc.y.end(), DEFAULT);
     std::fill(hitTimestamps.x.begin(), hitTimestamps.x.end(), DEFAULT);
     std::fill(hitTimestamps.y.begin(), hitTimestamps.y.end(), DEFAULT);
-    clusterBegin.x = -1;
-    clusterBegin.y = -1;
-    clusterEnd.x = -1;
-    clusterEnd.y = -1;
-    centroid.x = -1;
-    centroid.y = -1;
     fillQDC();
     fillTimestamps();
 }
@@ -65,140 +60,89 @@ void SciFiPlaneView::fillTimestamps() {
 }
 
 void SciFiPlaneView::findCluster() {
-    int currentStart{-1};
-    int currentEnd{-1};
-    int longestStart{-1};
-    int longestEnd{-1};
-    int currentLength{0};
-    int maxLength{0};
-    int consecutiveGaps{0};
 
-    // Loop on x
-    for (int i = 0; i < qdc.x.size(); ++i) {
-        if (qdc.x[i] != DEFAULT) {
-            // Inside a cluster
-            if (currentStart == -1) {
-                currentStart = i;
-            }
-            currentEnd = i;
-            currentLength = currentEnd - currentStart + 1;
+    auto clusterize = [&] (std::array<double, 512> &qdcarr, std::array<double, 512> &timearr, int &clusterB, int &clusterE) {
+        int currentStart{-1};
+        int currentEnd{-1};
+        int longestStart{-1};
+        int longestEnd{-1};
+        int currentLength{0};
+        int maxLength{0};
+        int consecutiveGaps{0};
 
-            // Update longest cluster if needed
-            if (currentLength > maxLength) {
-                maxLength = currentLength;
-                longestStart = currentStart;
-                longestEnd = currentEnd;
-            }
+        // Loop on x
+        for (int i = 0; i < qdcarr.size(); ++i) {
+            if (qdcarr[i] != DEFAULT) {
+                // Inside a cluster
+                if (currentStart == -1) {
+                    currentStart = i;
+                }
+                currentEnd = i;
+                currentLength = currentEnd - currentStart + 1;
 
-            consecutiveGaps = 0; // Reset consecutive gaps counter
-        } else {
-            // Outside a cluster
-            consecutiveGaps++;
+                // Update longest cluster if needed
+                if (currentLength > maxLength) {
+                    maxLength = currentLength;
+                    longestStart = currentStart;
+                    longestEnd = currentEnd;
+                }
 
-            if (consecutiveGaps > config.SCIFIMAXGAP) {
-                // Too many consecutive gaps, reset cluster start
-                currentStart = -1;
-                currentEnd = -1;
-            }
-        }
-    }
+                consecutiveGaps = 0; // Reset consecutive gaps counter
+            } else {
+                // Outside a cluster
+                consecutiveGaps++;
 
-    if (maxLength>=config.SCIFITHRESHOLD) {
-        clusterBegin.x = longestStart;
-        clusterEnd.x = longestEnd;
-    }
-
-    // Repeat for Y
-    currentStart = -1;
-    currentEnd = -1;
-    longestStart = -1;
-    longestEnd = -1;
-    currentLength = 0;
-    maxLength = 0;
-    consecutiveGaps = 0;
-
-    for (int i = 0; i < qdc.y.size(); ++i) {
-        if (qdc.y[i] != DEFAULT) {
-            // Inside a cluster
-            if (currentStart == -1) {
-                currentStart = i;
-            }
-            currentEnd = i;
-            currentLength = currentEnd - currentStart + 1;
-
-            // Update longest cluster if needed
-            if (currentLength > maxLength) {
-                maxLength = currentLength;
-                longestStart = currentStart;
-                longestEnd = currentEnd;
-            }
-
-            consecutiveGaps = 0; // Reset consecutive gaps counter
-        } else {
-            // Outside a cluster
-            consecutiveGaps++;
-
-            if (consecutiveGaps > config.SCIFIMAXGAP) {
-                // Too many consecutive gaps, reset cluster start
-                currentStart = -1;
-                currentEnd = -1;
+                if (consecutiveGaps > config.SCIFIMAXGAP) {
+                    // Too many consecutive gaps, reset cluster start
+                    currentStart = -1;
+                    currentEnd = -1;
+                }
             }
         }
-    }
 
-    if (maxLength>=config.SCIFITHRESHOLD) {
-        clusterBegin.y = longestStart;
-        clusterEnd.y = longestEnd;
-    }
+        if (maxLength>=config.SCIFITHRESHOLD) {
+            clusterB = longestStart;
+            clusterE = longestEnd;
+        }
+        if (clusterB != -1) {
+            std::fill(timearr.begin(), timearr.begin() + clusterB, DEFAULT);   
+            std::fill(timearr.begin() + clusterE + 1, timearr.end(), DEFAULT);
 
-    // Set values outside cluster to default
-    if (clusterBegin.x != -1 && clusterBegin.y != -1) {
-        std::fill(hitTimestamps.x.begin(), hitTimestamps.x.begin() + clusterBegin.x, DEFAULT);   
-        std::fill(hitTimestamps.x.begin() + clusterEnd.x + 1, hitTimestamps.x.end(), DEFAULT);
-        std::fill(hitTimestamps.y.begin(), hitTimestamps.y.begin() + clusterBegin.y, DEFAULT);
-        std::fill(hitTimestamps.y.begin() + clusterEnd.y + 1, hitTimestamps.y.end(), DEFAULT);
+            std::fill(qdcarr.begin(), qdcarr.begin() + clusterB, DEFAULT);   
+            std::fill(qdcarr.begin() + clusterE + 1, qdcarr.end(), DEFAULT);
+        }
+        else {
+            std::fill(timearr.begin(), timearr.end(), DEFAULT);   
 
-        std::fill(qdc.x.begin(), qdc.x.begin() + clusterBegin.x, DEFAULT);   
-        std::fill(qdc.x.begin() + clusterEnd.x + 1, qdc.x.end(), DEFAULT);
-        std::fill(qdc.y.begin(), qdc.y.begin() + clusterBegin.y, DEFAULT);
-        std::fill(qdc.y.begin() + clusterEnd.y + 1, qdc.y.end(), DEFAULT);
-    }
+            std::fill(qdcarr.begin(), qdcarr.end(), DEFAULT);   ;
+        }        
+    };
+    clusterize(qdc.x, hitTimestamps.x, clusterBegin.x, clusterEnd.x);
+    clusterize(qdc.y, hitTimestamps.y, clusterBegin.y, clusterEnd.y);
 }
 
 void SciFiPlaneView::findCentroid(int windowSize) {
-  std::array<double, 2> centroidCoordinates;
   // find shower centroid position in cm   
-  double maxSignal{0};
-  for (int index{0}; index <2; ++index) {
-    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {
-  
-      double signalSum{0};
+  auto slide = [&] (std::array<double, 512> &qdcarr, double &centroidCoordinate) {
+    double maxSignal{0};    
+    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {      
+      int off = std::count(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, DEFAULT);
+      if (off >= static_cast<int>(2*windowSize/3)) continue;
 
-      for (int j{i}; j < (i+windowSize); ++j) {
-        int den = windowSize;
-        double signal;
-        if (index == 0) signal = qdc.x[j];
-        else signal = qdc.y[j];
-        
-        if ( signal != -999 ){
-          signalSum += signal;
-        } else {
-          den -=1;
-        }
+      double signalSum = std::accumulate(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, 0, 
+        [](int current_sum, int value) {
+            return (value > DEFAULT) ? (current_sum + value) : current_sum;
+        });
 
-        if (j == i+windowSize-1) {
-          if (den < 2) continue;
-          double ratio =  signalSum/den;
-          if ( maxSignal < ratio ) {
-            maxSignal = ratio;
-            centroidCoordinates[index] = (i+(windowSize*.5)) *.025;    // conversion in cm
-          }
-        }
+      double ratio =  signalSum/(windowSize-off);
+      if ( maxSignal < ratio ) {
+        maxSignal = ratio;
+        centroidCoordinate = (i+(windowSize*.5)) *.025;    // conversion in cm
       }
     }
-  }
-  centroid.x = centroidCoordinates[0];
-  centroid.y = centroidCoordinates[1];
+  };
+  slide(qdc.x, centroid.x);
+  slide(qdc.y, centroid.y);
 }
 
 

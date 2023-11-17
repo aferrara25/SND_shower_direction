@@ -46,7 +46,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::
     const auto t{tag.c_str()};
     //plot per event
     m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
-    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (ns) ; entries", t), 150, -5, 145);
+    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 30, -5, 25);
     m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
     //plot per station
