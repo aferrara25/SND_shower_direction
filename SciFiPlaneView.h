@@ -54,7 +54,6 @@ public:
   void findCluster();
   void findCentroid(int windowSize);
   void timeCut(double referenceTime);
-  void resetHit(bool isVertical, int index);
 
 private:
   xy_pair<std::array<double,512>> qdc;
@@ -72,6 +71,7 @@ private:
 
   void fillQDC();
   void fillTimestamps();
+  void resetHit(bool isVertical, int index);
 
 };
 #endif

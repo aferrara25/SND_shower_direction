@@ -169,7 +169,7 @@ void timeCut (std::vector<SciFiPlaneView> &detector) {
   }
 }
 
-void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
+void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false) //(int runN, int partN)
 {
 
   auto start = std::chrono::system_clock::now();
@@ -188,13 +188,19 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   // 100639: pion 300 GeV 3 walls file
 
   auto *fEventTree = new TChain("rawConv");
-  //for (int i = 0; i<3; ++i){
-  for (int i = 0; i<nFiles; ++i){
-    fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, i)); 
+  TFile* outputFile;
+  if (isMulticore){
+    fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, nFiles));
+    outputFile = new TFile(Form("%sRun_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
   }
-
-  TFile outputFile(Form("%sRun_%d.root", configuration.OUTFILENAME.c_str(), runNumber), "RECREATE"); 
-  outputFile.cd();
+  else {
+    for (int i = 0; i<nFiles; ++i){
+      fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, i)); 
+    }
+    outputFile = new TFile(Form("%sRun_%d.root", configuration.OUTFILENAME.c_str(), runNumber), "RECREATE");
+  }
+ 
+  outputFile->cd();
 
   std::map<std::string, double> counters;
   std::map<std::string, TH1*> plots;
@@ -263,6 +269,6 @@ void runAnalysis(int runNumber, int nFiles, bool isTB) //(int runN, int partN)
   std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
 
   // ##################### Write results to file #####################
-  outputFile.Write();
-  outputFile.Close();
+  outputFile->Write();
+  outputFile->Close();
 }
