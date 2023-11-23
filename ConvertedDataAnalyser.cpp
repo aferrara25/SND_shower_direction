@@ -12,7 +12,7 @@ cfg setCfg( bool istb ) {
     config.MUSTATION = 5;
     config.NWALLS = 3;
     config.SCIFITHRESHOLD = 35;
-    config.SCIFIMAXGAP = 5;
+    config.SCIFIMAXGAP = 3;
     config.SCIFISIDECUT = 90;
     config.SCIFIMINHITS = 10;
     config.MUMINHITS = 5;
@@ -38,38 +38,45 @@ cfg setCfg( bool istb ) {
 
 
 
-void definePlots( cfg configuration, std::map<std::string, TH1*> &m_plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
+void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
   int nChannels = configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; //512 for Test Beam
   
   for (auto tag : tags) {
 
     const auto t{tag.c_str()};
     //plot per event
-    m_plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
-    m_plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
-    m_plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
+    plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
+    plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
+    plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     
     //plot per station
     for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
-      m_plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
-      m_plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), nChannels, 0, nChannels);
-      m_plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
-      m_plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), 135, -.5, 13);
-      m_plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st), 100, -30, 80);
-      m_plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st), 100, -30, 80);
-      m_plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), 10, 0, 10);
-      m_plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
-      m_plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
-      m_plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
+      plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
+      plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), nChannels, 0, nChannels);
+      plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
+      plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), 135, -.5, 13);
+      plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st), 100, -30, 80);
+      plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st), 100, -30, 80);
+      plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), 10, 0, 10);
+      plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
+      plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
+      plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
+    }
+
+    for (int start_st = 1; start_st < configuration.SCIFISTATION+1; ++start_st){
+      for (int st = start_st; st < configuration.SCIFISTATION+1; ++st){
+        plots[Form("%s_Hits_st%d_start%d", t, st, start_st)] = new TH1D (Form("%s_Hits_st%d_start%d", t, st, start_st), Form("%s_Hits_st%d_start%d;n hit in event;entries", t, st, start_st), nChannels, 0, 2*nChannels);
+      }
     }
   }
 }
 
-void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t) {
+void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
   for (auto plane : detector){
     //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
-    auto centroid = plane.getCentroid();
-    plots[Form("%s_Centroid_Position_st%d", t.c_str(), plane.getStation())]->Fill(centroid.x, centroid.y);
+    auto centroid{plane.getCentroid()};
+    auto station{plane.getStation()};
+    plots[Form("%s_Centroid_Position_st%d", t.c_str(), station)]->Fill(centroid.x, centroid.y);
     
     int nhitsX{plane.sizes().x};
     int nhitsY{plane.sizes().y};
@@ -78,22 +85,25 @@ void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1
     std::array<double, 512> qdcX{plane.getQDC().x};
     std::array<double, 512> qdcY{plane.getQDC().y};
 
-    plots[Form("%s_Station", t.c_str())]->Fill(plane.getStation(), nhitsX + nhitsY);
-    plots[Form("%s_HitsperStation_st%dX", t.c_str(), plane.getStation())]->Fill(nhitsX);
-    plots[Form("%s_HitsperStation_st%dY", t.c_str(), plane.getStation())]->Fill(nhitsY);
-    plots[Form("%s_HitDistribution_st%d", t.c_str(), plane.getStation())]->Fill(nhitsX, nhitsY);
+    plots[Form("%s_Station", t.c_str())]->Fill(station, nhitsX + nhitsY);
+    plots[Form("%s_HitsperStation_st%dX", t.c_str(), station)]->Fill(nhitsX);
+    plots[Form("%s_HitsperStation_st%dY", t.c_str(), station)]->Fill(nhitsY);
+    plots[Form("%s_HitDistribution_st%d", t.c_str(), station)]->Fill(nhitsX, nhitsY);
+    if (shStart != -1 && station >= shStart) {
+      plots[Form("%s_Hits_st%d_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY);
+    }
     for (int i{0}; i<512; ++i) {
       if (qdcX[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dX", t.c_str(), plane.getStation())]->Fill(qdcX[i]);
+        plots[Form("%s_Signals_st%dX", t.c_str(), station)]->Fill(qdcX[i]);
         plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
-        plots[Form("%s_Position_st%dX", t.c_str(), plane.getStation())]->Fill(i*0.025);
-        plots[Form("%s_Tofpet_st%dX", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
+        plots[Form("%s_Position_st%dX", t.c_str(), station)]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dX", t.c_str(), station)]->Fill(static_cast<int>(i/64));
       }
       if (qdcY[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dY", t.c_str(), plane.getStation())]->Fill(qdcY[i]);
+        plots[Form("%s_Signals_st%dY", t.c_str(), station)]->Fill(qdcY[i]);
         plots[Form("%s_Times", t.c_str())]->Fill(timeY[i]);
-        plots[Form("%s_Position_st%dY", t.c_str(), plane.getStation())]->Fill(i*0.025);
-        plots[Form("%s_Tofpet_st%dY", t.c_str(), plane.getStation())]->Fill(static_cast<int>(i/64));
+        plots[Form("%s_Position_st%dY", t.c_str(), station)]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dY", t.c_str(), station)]->Fill(static_cast<int>(i/64));
       }
     }
   }
@@ -241,16 +251,16 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
     for (auto &plane : scifi_planes)  plane.findCentroid(6);
-    fillPlots(scifi_planes, plots, tags[0]);
+    fillPlots(scifi_planes, plots, tags[0], showerStart);
 
     //After cut
     if ( !hitCut(scifi_planes) ) continue;
-    timeCut(scifi_planes);
+    //timeCut(scifi_planes);
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
     for (auto &plane : scifi_planes) plane.findCentroid(6);
-    fillPlots(scifi_planes, plots, tags[1]);
+    fillPlots(scifi_planes, plots, tags[1], showerStart);
     
     //After cluster
     for (auto &plane : scifi_planes){
@@ -259,7 +269,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     }
     showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
-    fillPlots(scifi_planes, plots, tags[2]);
+    fillPlots(scifi_planes, plots, tags[2], showerStart);
     
   }
   
