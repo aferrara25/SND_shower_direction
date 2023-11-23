@@ -12,7 +12,7 @@ cfg setCfg( bool istb ) {
     config.MUSTATION = 5;
     config.NWALLS = 3;
     config.SCIFITHRESHOLD = 35;
-    config.SCIFIMAXGAP = 3;
+    config.SCIFIMAXGAP = 1;
     config.SCIFISIDECUT = 90;
     config.SCIFIMINHITS = 10;
     config.MUMINHITS = 5;
@@ -255,7 +255,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
 
     //After cut
     if ( !hitCut(scifi_planes) ) continue;
-    //timeCut(scifi_planes);
+    timeCut(scifi_planes);
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
