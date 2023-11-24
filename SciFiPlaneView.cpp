@@ -61,6 +61,7 @@ void SciFiPlaneView::fillTimestamps() {
 
 void SciFiPlaneView::findCluster() {
 
+    if (station == 1 && sizes().x == 1 && sizes().y == 1) {return;}
     auto clusterize = [&] (std::array<double, 512> &qdcarr, std::array<double, 512> &timearr, int &clusterB, int &clusterE) {
         int currentStart{-1};
         int currentEnd{-1};
@@ -69,7 +70,6 @@ void SciFiPlaneView::findCluster() {
         int currentLength{0};
         int maxLength{0};
         int consecutiveGaps{0};
-
         // Loop on x
         for (int i = 0; i < qdcarr.size(); ++i) {
             if (qdcarr[i] != DEFAULT) {
