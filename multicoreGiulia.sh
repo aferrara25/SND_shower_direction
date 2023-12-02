@@ -16,6 +16,7 @@ commands=()
 for ((i=0; i<$nFiles; i++)); do
   commands+=("root -l -b -x <<EOF
 .L SciFiPlaneView.cpp
+.L USPlaneView.cpp
 .L ConvertedDataAnalyser.cpp
 runAnalysis($run, $i, $isTB, true)
 .q

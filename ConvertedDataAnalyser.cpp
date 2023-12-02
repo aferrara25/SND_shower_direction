@@ -154,12 +154,39 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
     }
 
     auto plane = SciFiPlaneView(configuration, sf_hits, begin, count, st);
-//    plane.fillQDC();
-//    plane.fillTimestamps();
     scifi_planes.emplace_back(plane);
   }
 
   return scifi_planes;
+
+}
+
+std::vector<USPlaneView> fillUS(cfg configuration, TClonesArray *mufi_hits){
+
+  std::vector<USPlaneView> us_planes;
+
+  int begin{0};
+  int count{0};
+
+  int n_mufi_hits{mufi_hits->GetEntries()};
+  //skip veto/beam monitor
+  while (count < n_mufi_hits &&
+        static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() != 2) {
+    ++count;
+  }
+  //plane count starts from 0
+  for (int pl{0}; pl < 5; ++pl) {
+    begin = count;
+    while (count < n_mufi_hits &&
+           pl == static_cast<MuFilterHit *>(mufi_hits->At(count))->GetPlane() &&
+           static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() == 2) { //stop before DS
+      ++count;
+    }
+    auto plane = USPlaneView(configuration, mufi_hits, begin, count, pl);
+    us_planes.emplace_back(plane);
+  }
+
+  return us_planes;
 
 }
 
@@ -274,6 +301,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     if (sf_max < 15 && mu_max < 3 ) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
+    auto us_planes = fillUS(configuration, mu_hits);
 
     //Before cut
     int showerStart = checkShower(scifi_planes);
@@ -300,7 +328,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     fillPlots(scifi_planes, plots, tags[2], showerStart);
     
   }
-  
+ 
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
   auto end = std::chrono::system_clock::to_time_t(stop);
