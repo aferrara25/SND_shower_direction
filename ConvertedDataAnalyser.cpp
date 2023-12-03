@@ -48,7 +48,8 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
     plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
     plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
-    
+    plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1000, 0, 6000, 1000, 0, 6000);
+
     //plot per station
     for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
       plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
@@ -77,10 +78,13 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
   }
 }
 
-void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
+void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
   int showerHits{0};
-  auto refCentroid{detector[0].getCentroid()};
-  for (auto plane : detector){
+  double ScifiQDCSum{0};
+  double USQDCSum{0};
+  double Small_USQDCSum{0}, Large_USQDCSum{0};
+  auto refCentroid{Scifi_detector[0].getCentroid()};
+  for (auto plane : Scifi_detector){
     //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
     auto centroid{plane.getCentroid()};
     auto station{plane.getStation()};
@@ -100,6 +104,12 @@ void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1
     std::array<double, 512> timeY{plane.getTime().y};
     std::array<double, 512> qdcX{plane.getQDC().x};
     std::array<double, 512> qdcY{plane.getQDC().y};
+    double sumX = std::accumulate(qdcX.begin(), qdcX.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    double sumY = std::accumulate(qdcY.begin(), qdcY.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    ScifiQDCSum += sumX;
+    ScifiQDCSum += sumY;
+
+    //std::cout << "X: " << sumX << "\tY: " << sumY << "\tPlane total: " << ScifiQDCSum << std::endl;
 
     plots[Form("%s_Station", t.c_str())]->Fill(station, nhitsX + nhitsY);
     plots[Form("%s_HitsperStation_st%dX", t.c_str(), station)]->Fill(nhitsX);
@@ -135,6 +145,16 @@ void fillPlots (std::vector<SciFiPlaneView> &detector, std::map<std::string, TH1
       }
     }
   }
+
+  for (auto &plane : US){
+    auto sumQDC = plane.getTotQDC();
+    Small_USQDCSum += sumQDC.s;
+    Large_USQDCSum += sumQDC.l;
+    USQDCSum += Small_USQDCSum;
+    USQDCSum += Large_USQDCSum;
+    //std::cout << "Small: " << Small_USQDCSum << "\tLarge: " << Large_USQDCSum << "\tTot: " << USQDCSum;
+  }
+  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);
 }
 
 std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
@@ -307,7 +327,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
     for (auto &plane : scifi_planes)  plane.findCentroid(6);
-    fillPlots(scifi_planes, plots, tags[0], showerStart);
+    fillPlots(scifi_planes, us_planes, plots, tags[0], showerStart);
 
     //After cut
     if ( !hitCut(scifi_planes) ) continue;
@@ -316,7 +336,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
     for (auto &plane : scifi_planes) plane.findCentroid(6);
-    fillPlots(scifi_planes, plots, tags[1], showerStart);
+    fillPlots(scifi_planes, us_planes, plots, tags[1], showerStart);
     
     //After cluster
     for (auto &plane : scifi_planes){
@@ -325,7 +345,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     }
     showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
-    fillPlots(scifi_planes, plots, tags[2], showerStart);
+    fillPlots(scifi_planes, us_planes, plots, tags[2], showerStart);
     
   }
  
