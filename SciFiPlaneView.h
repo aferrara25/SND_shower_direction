@@ -22,6 +22,7 @@ struct cfg
   int BOARDPERSTATION{-1};
 
   double TIMECUT{-1};
+  double MUTIMECUT{-1};
 
   //geometry parameters
   double SCIFIDIM{-1};

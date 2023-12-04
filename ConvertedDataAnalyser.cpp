@@ -18,6 +18,7 @@ cfg setCfg( bool istb ) {
     config.MUMINHITS = 5;
     config.BOARDPERSTATION = 1;
     config.TIMECUT = 1;
+    config.MUTIMECUT = 3;
     config.SCIFIDIM = 13;
     config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/";
     config.OUTFILENAME = "output/TB_output";
@@ -156,10 +157,10 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
   return false;
 }
 
-void timeCut (std::vector<SciFiPlaneView> &detector) {
+void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> US ) {
   double referenceTime{-1};
 
-  for (auto &plane : detector) {
+  for (auto &plane : Scifi) {
     int station = plane.getStation();
     auto time = plane.getTime();
     //first look for the reference time
@@ -174,6 +175,10 @@ void timeCut (std::vector<SciFiPlaneView> &detector) {
       if (referenceTime == -1) continue;
       plane.timeCut(referenceTime);
     }
+  }
+  for (auto &plane : US) {
+    if (referenceTime == -1) continue;
+    plane.timeCut(referenceTime);
   }
 }
 
@@ -337,7 +342,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
 
     //After cut
     if ( !hitCut(scifi_planes) ) continue;
-    timeCut(scifi_planes);
+    timeCut(scifi_planes, us_planes);
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
