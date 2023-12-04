@@ -70,12 +70,18 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Centroid_Residuals_st%dY", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dY", t, st), Form("%s_Centroid_Residuals_st%dY; y-y_ref (cm);entries", t, st), 26*100, -13, 13);
     }
     for (int start_st = 1; start_st < configuration.SCIFISTATION+1; ++start_st){
+      plots[Form("%s_Shower_SciFi_QDC_shStart%d", t, start_st)] = new TH1D (Form("%s_Shower_SciFi_QDC_shStart%d", t, start_st), Form("%s_Shower_SciFi_QDC_shStart%d; qdc sum (a.u.);entries", t, start_st), 1000, -100, 8000);
       for (int st = start_st; st < configuration.SCIFISTATION+1; ++st){
         plots[Form("%s_Hits_st%d_start%d", t, st, start_st)] = new TH1D (Form("%s_Hits_st%d_start%d", t, st, start_st), Form("%s_Hits_st%d_start%d;n hit in event;entries", t, st, start_st), nChannels, 0, 2*nChannels);
       }
       for (int st = start_st+1; st < configuration.SCIFISTATION+1; ++st){
         plots[Form("%s_Hits_st%d_vs_start%d", t, st, start_st)] = new TH2D (Form("%s_Hits_st%d_vs_start%d", t, st, start_st), Form("%s_Hits_st%d_vs_start%d;n hit in st%d;n hit in st%d", t, st, start_st, st, start_st), nChannels, 0, 2*nChannels, nChannels, 0, 2*nChannels);
       }
+    }
+    // US planes
+    for (int pl{1}; pl < 6; ++pl) {
+      plots[Form("%s_US_Timestamps_pl%ds", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%ds", t, pl), Form("%s_US_Timestamps_pl%ds;timestamps (clk cycles);entries", t, pl), 100, -2, 15);
+      plots[Form("%s_US_Timestamps_pl%dl", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%dl", t, pl), Form("%s_US_Timestamps_pl%dl;timestamps (clk cycles);entries", t, pl), 100, -2, 15);
     }
   }
 }
@@ -126,7 +132,7 @@ std::vector<USPlaneView> fillUS(cfg configuration, TClonesArray *mufi_hits){
            static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() == 2) { //stop before DS
       ++count;
     }
-    auto plane = USPlaneView(configuration, mufi_hits, begin, count, pl);
+    auto plane = USPlaneView(configuration, mufi_hits, begin, count, pl+1);
     us_planes.emplace_back(plane);
   }
 
@@ -256,13 +262,28 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
 
   for (auto &plane : US){
     auto sumQDC = plane.getTotQDC();
+    auto timesUS = plane.getTime();
+    int pl = plane.getStation();
     Small_USQDCSum += sumQDC.s;
     Large_USQDCSum += sumQDC.l;
     USQDCSum += Small_USQDCSum;
     USQDCSum += Large_USQDCSum;
+    for (int i{0}; i<NCHANNELS; ++i) {
+      if (timesUS[i] != DEFAULT) {
+        if ((i%16)%8==2 || (i%16)%8==5) {
+          plots[Form("%s_US_Timestamps_pl%ds", t.c_str(), pl)]->Fill(timesUS[i]);
+        }
+        else {
+          plots[Form("%s_US_Timestamps_pl%dl", t.c_str(), pl)]->Fill(timesUS[i]);
+        }
+      }
+    }    
   }
   plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);
-  if (showerStart > 0) plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum);
+  if (showerStart > 0) {
+    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum);
+    plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), showerStart)]->Fill(partialScifiQDCSum);
+  }
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false) //(int runN, int partN)

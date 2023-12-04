@@ -66,7 +66,7 @@ void USPlaneView::fillTimestamps() {
                 if (16*bar + i>159) {
                     continue;
                 }
-                qdc[16*bar + i] = hit->GetTime(i);
+                hitTimestamps[16*bar + i] = hit->GetTime(i);
             }
         }
     }
