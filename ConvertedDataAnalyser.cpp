@@ -48,7 +48,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
     plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
     plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
-    plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1000, 0, 6000, 1000, 0, 6000);
+    plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 250, 0, 6000, 250, 0, 6000);
 
     //plot per station
     for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
@@ -62,6 +62,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
       plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
+      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 250, 0, 6000, 250, 0, 6000);
     }
     for (int st = 2; st < configuration.SCIFISTATION+1; ++st){
       plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 26*100, -13, 13);
@@ -78,84 +79,6 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
   }
 }
 
-void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
-  int showerHits{0};
-  double ScifiQDCSum{0};
-  double USQDCSum{0};
-  double Small_USQDCSum{0}, Large_USQDCSum{0};
-  auto refCentroid{Scifi_detector[0].getCentroid()};
-  for (auto plane : Scifi_detector){
-    //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
-    auto centroid{plane.getCentroid()};
-    auto station{plane.getStation()};
-    plots[Form("%s_Centroid_Position_st%d", t.c_str(), station)]->Fill(centroid.x, centroid.y);
-    if (station > 1) {
-      if (refCentroid.x != -1 && centroid.x != -1) {
-        plots[Form("%s_Centroid_Residuals_st%dX", t.c_str(), station)]->Fill(centroid.x - refCentroid.x);
-      }
-      if (refCentroid.y != -1 && centroid.y != -1) {
-        plots[Form("%s_Centroid_Residuals_st%dY", t.c_str(), station)]->Fill(centroid.y - refCentroid.y);
-      }
-    } 
-    
-    int nhitsX{plane.sizes().x};
-    int nhitsY{plane.sizes().y};
-    std::array<double, 512> timeX{plane.getTime().x};
-    std::array<double, 512> timeY{plane.getTime().y};
-    std::array<double, 512> qdcX{plane.getQDC().x};
-    std::array<double, 512> qdcY{plane.getQDC().y};
-    double sumX = std::accumulate(qdcX.begin(), qdcX.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
-    double sumY = std::accumulate(qdcY.begin(), qdcY.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
-    ScifiQDCSum += sumX;
-    ScifiQDCSum += sumY;
-
-    //std::cout << "X: " << sumX << "\tY: " << sumY << "\tPlane total: " << ScifiQDCSum << std::endl;
-
-    plots[Form("%s_Station", t.c_str())]->Fill(station, nhitsX + nhitsY);
-    plots[Form("%s_HitsperStation_st%dX", t.c_str(), station)]->Fill(nhitsX);
-    plots[Form("%s_HitsperStation_st%dY", t.c_str(), station)]->Fill(nhitsY);
-    plots[Form("%s_HitDistribution_st%d", t.c_str(), station)]->Fill(nhitsX, nhitsY);
-    if (station == shStart) {
-      showerHits = nhitsX + nhitsY;
-    }
-    if (shStart != -1 && station >= shStart) {
-      plots[Form("%s_Hits_st%d_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY);
-    }
-    if (shStart != -1 && station > shStart) {
-      plots[Form("%s_Hits_st%d_vs_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY, showerHits);
-    }
-    for (int i{0}; i<512; ++i) {
-      if (qdcX[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dX", t.c_str(), station)]->Fill(qdcX[i]);
-        plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
-        plots[Form("%s_Position_st%dX", t.c_str(), station)]->Fill(i*0.025);
-        plots[Form("%s_Tofpet_st%dX", t.c_str(), station)]->Fill(static_cast<int>(i/64));
-        if (station == 1 && nhitsX == 1 && nhitsY == 1){
-          refCentroid.x = i*0.025;
-        }
-      }
-      if (qdcY[i] != DEFAULT) {
-        plots[Form("%s_Signals_st%dY", t.c_str(), station)]->Fill(qdcY[i]);
-        plots[Form("%s_Times", t.c_str())]->Fill(timeY[i]);
-        plots[Form("%s_Position_st%dY", t.c_str(), station)]->Fill(i*0.025);
-        plots[Form("%s_Tofpet_st%dY", t.c_str(), station)]->Fill(static_cast<int>(i/64));
-        if (station == 1 && nhitsX == 1 && nhitsY == 1){
-          refCentroid.y = i*0.025;
-        }
-      }
-    }
-  }
-
-  for (auto &plane : US){
-    auto sumQDC = plane.getTotQDC();
-    Small_USQDCSum += sumQDC.s;
-    Large_USQDCSum += sumQDC.l;
-    USQDCSum += Small_USQDCSum;
-    USQDCSum += Large_USQDCSum;
-    //std::cout << "Small: " << Small_USQDCSum << "\tLarge: " << Large_USQDCSum << "\tTot: " << USQDCSum;
-  }
-  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);
-}
 
 std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
@@ -252,6 +175,89 @@ void timeCut (std::vector<SciFiPlaneView> &detector) {
       plane.timeCut(referenceTime);
     }
   }
+}
+
+void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
+  int showerHits{0};
+  double ScifiQDCSum{0}, partialScifiQDCSum{0};
+  double USQDCSum{0};
+  double Small_USQDCSum{0}, Large_USQDCSum{0};
+  auto refCentroid{Scifi_detector[0].getCentroid()};
+  int showerStart = checkShower(Scifi_detector);
+  
+  for (auto plane : Scifi_detector){
+    //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
+    auto centroid{plane.getCentroid()};
+    auto station{plane.getStation()};
+    plots[Form("%s_Centroid_Position_st%d", t.c_str(), station)]->Fill(centroid.x, centroid.y);
+    if (station > 1) {
+      if (refCentroid.x != -1 && centroid.x != -1) {
+        plots[Form("%s_Centroid_Residuals_st%dX", t.c_str(), station)]->Fill(centroid.x - refCentroid.x);
+      }
+      if (refCentroid.y != -1 && centroid.y != -1) {
+        plots[Form("%s_Centroid_Residuals_st%dY", t.c_str(), station)]->Fill(centroid.y - refCentroid.y);
+      }
+    } 
+    
+    int nhitsX{plane.sizes().x};
+    int nhitsY{plane.sizes().y};
+    std::array<double, 512> timeX{plane.getTime().x};
+    std::array<double, 512> timeY{plane.getTime().y};
+    std::array<double, 512> qdcX{plane.getQDC().x};
+    std::array<double, 512> qdcY{plane.getQDC().y};
+    double sumX = std::accumulate(qdcX.begin(), qdcX.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    double sumY = std::accumulate(qdcY.begin(), qdcY.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    ScifiQDCSum += sumX;
+    ScifiQDCSum += sumY;
+    if (station >= showerStart) {
+      partialScifiQDCSum += sumX;
+      partialScifiQDCSum += sumY;
+    } 
+
+    plots[Form("%s_Station", t.c_str())]->Fill(station, nhitsX + nhitsY);
+    plots[Form("%s_HitsperStation_st%dX", t.c_str(), station)]->Fill(nhitsX);
+    plots[Form("%s_HitsperStation_st%dY", t.c_str(), station)]->Fill(nhitsY);
+    plots[Form("%s_HitDistribution_st%d", t.c_str(), station)]->Fill(nhitsX, nhitsY);
+    if (station == shStart) {
+      showerHits = nhitsX + nhitsY;
+    }
+    if (shStart != -1 && station >= shStart) {
+      plots[Form("%s_Hits_st%d_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY);
+    }
+    if (shStart != -1 && station > shStart) {
+      plots[Form("%s_Hits_st%d_vs_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY, showerHits);
+    }
+    for (int i{0}; i<512; ++i) {
+      if (qdcX[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dX", t.c_str(), station)]->Fill(qdcX[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
+        plots[Form("%s_Position_st%dX", t.c_str(), station)]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dX", t.c_str(), station)]->Fill(static_cast<int>(i/64));
+        if (station == 1 && nhitsX == 1 && nhitsY == 1){
+          refCentroid.x = i*0.025;
+        }
+      }
+      if (qdcY[i] != DEFAULT) {
+        plots[Form("%s_Signals_st%dY", t.c_str(), station)]->Fill(qdcY[i]);
+        plots[Form("%s_Times", t.c_str())]->Fill(timeY[i]);
+        plots[Form("%s_Position_st%dY", t.c_str(), station)]->Fill(i*0.025);
+        plots[Form("%s_Tofpet_st%dY", t.c_str(), station)]->Fill(static_cast<int>(i/64));
+        if (station == 1 && nhitsX == 1 && nhitsY == 1){
+          refCentroid.y = i*0.025;
+        }
+      }
+    }
+  }
+
+  for (auto &plane : US){
+    auto sumQDC = plane.getTotQDC();
+    Small_USQDCSum += sumQDC.s;
+    Large_USQDCSum += sumQDC.l;
+    USQDCSum += Small_USQDCSum;
+    USQDCSum += Large_USQDCSum;
+  }
+  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);
+  if (showerStart > 0) plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum);
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false) //(int runN, int partN)
