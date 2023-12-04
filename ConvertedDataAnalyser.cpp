@@ -210,13 +210,13 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     std::array<double, 512> timeY{plane.getTime().y};
     std::array<double, 512> qdcX{plane.getQDC().x};
     std::array<double, 512> qdcY{plane.getQDC().y};
-    double sumX = std::accumulate(qdcX.begin(), qdcX.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
-    double sumY = std::accumulate(qdcY.begin(), qdcY.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
-    ScifiQDCSum += sumX;
-    ScifiQDCSum += sumY;
+    auto sumScifi = plane.getTotQDC();
+
+    ScifiQDCSum += sumScifi.x;
+    ScifiQDCSum += sumScifi.y;
     if (station >= showerStart) {
-      partialScifiQDCSum += sumX;
-      partialScifiQDCSum += sumY;
+      partialScifiQDCSum += sumScifi.x;
+      partialScifiQDCSum += sumScifi.y;
     } 
 
     plots[Form("%s_Station", t.c_str())]->Fill(station, nhitsX + nhitsY);

@@ -199,3 +199,11 @@ const SciFiPlaneView::xy_pair<std::array<double, 512>> SciFiPlaneView::getQDC() 
     xy_pair<std::array<double, 512>> charge{qdc.x, qdc.y};
     return charge;
 }
+
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getTotQDC() const{
+    xy_pair<double> qdcSum{0,0};
+    qdcSum.x = std::accumulate(qdc.x.begin(), qdc.x.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    qdcSum.y = std::accumulate(qdc.y.begin(), qdc.y.end(), 0, [](int current_sum, int value) {return (value > DEFAULT) ? (current_sum + value) : current_sum;});
+    
+    return qdcSum;
+}
