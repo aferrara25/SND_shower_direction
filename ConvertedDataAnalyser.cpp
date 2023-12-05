@@ -63,7 +63,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
       plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
-      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 250, 0, 6000, 250, 0, 6000);
+      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 250, 0, 50000, 250, 0, 9000);
     }
     for (int st = 2; st < configuration.SCIFISTATION+1; ++st){
       plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 26*100, -13, 13);
@@ -298,11 +298,11 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   
   // ##################### Read file #####################
   //int runNumber{100633};  
-  // 100631: pion 100 GeV 3 walls file
-  // 100633: pion 140 GeV 3 walls file
-  // 100635: pion 180 GeV 3 walls file
-  // 100637: pion 240 GeV 3 walls file
-  // 100639: pion 300 GeV 3 walls file
+  // 100673: pion 100 GeV 3 walls 16 files 
+  // 100633: pion 140 GeV 3 walls 22 files
+  // 100671: pion 180 GeV 3 walls 33 files
+  // 100648: pion 240 GeV 3 walls 59 files
+  // 100639: pion 300 GeV 3 walls 58 files
 
   auto *fEventTree = new TChain("rawConv");
   TFile* outputFile;
