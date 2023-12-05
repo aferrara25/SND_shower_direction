@@ -266,8 +266,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     int pl = plane.getStation();
     Small_USQDCSum += sumQDC.s;
     Large_USQDCSum += sumQDC.l;
-    USQDCSum += Small_USQDCSum;
-    USQDCSum += Large_USQDCSum;
+    USQDCSum += (sumQDC.s + sumQDC.l);
     for (int i{0}; i<NCHANNELS; ++i) {
       if (timesUS[i] != DEFAULT) {
         if ((i%16)%8==2 || (i%16)%8==5) {
@@ -279,9 +278,9 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
       }
     }    
   }
-  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);
+  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);  // only large?
   if (showerStart > 0) {
-    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum);
+    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), showerStart)]->Fill(partialScifiQDCSum);
   }
 }

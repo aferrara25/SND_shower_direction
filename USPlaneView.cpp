@@ -80,7 +80,7 @@ void USPlaneView::resetHit(int index){
 
 void USPlaneView::timeCut (double referenceTime) {
     for (int i{0}; i < NCHANNELS; ++i) {
-        if ( (hitTimestamps[i] - referenceTime) > config.MUTIMECUT) resetHit(i);   
+        if ( (hitTimestamps[i] - referenceTime) >= config.MUTIMECUT) resetHit(i);   
     }
 }
 
