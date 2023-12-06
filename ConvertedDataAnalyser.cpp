@@ -63,7 +63,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
       plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
-      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 250, 0, 50000, 250, 0, 9000);
+      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 250, 0, 25000, 250, 0, 9000);
     }
     for (int st = 2; st < configuration.SCIFISTATION+1; ++st){
       plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 26*100, -13, 13);
@@ -278,9 +278,9 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
       }
     }    
   }
-  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(USQDCSum, ScifiQDCSum);  // only large?
+  plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(Large_USQDCSum, ScifiQDCSum);  // only large?
   if (showerStart > 0) {
-    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(USQDCSum, partialScifiQDCSum); // only large?
+    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), showerStart)]->Fill(partialScifiQDCSum);
   }
 }
@@ -341,7 +341,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   // Loop over events
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
-    if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
+    //if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
     //if (m >10000) break;
     fEventTree->GetEntry(m);
 
