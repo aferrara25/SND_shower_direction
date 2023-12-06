@@ -22,6 +22,7 @@ struct cfg
   int BOARDPERSTATION{-1};
 
   double TIMECUT{-1};
+  double MUTIMECUT{-1};
 
   //geometry parameters
   double SCIFIDIM{-1};
@@ -50,6 +51,7 @@ public:
   const xy_pair<double> getCentroid() const;
   const xy_pair<std::array<double, 512>> getTime() const;
   const xy_pair<std::array<double, 512>> getQDC() const;
+  const xy_pair<double> getTotQDC() const;
 
   void findCluster();
   void findCentroid(int windowSize);
