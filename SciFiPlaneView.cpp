@@ -121,6 +121,64 @@ void SciFiPlaneView::findCluster() {
     clusterize(qdc.y, hitTimestamps.y, clusterBegin.y, clusterEnd.y);
 }
 
+bool SciFiPlaneView::infoCluster() {
+
+    if (station == 1 && sizes().x == 1 && sizes().y == 1) {return false;}
+    auto clusterize = [&] (std::array<double, 512> &qdcarr, std::array<double, 512> &timearr, int &clusterB, int &clusterE) {
+        int currentStart{-1};
+        int currentEnd{-1};
+        int longestStart{-1};
+        int longestEnd{-1};
+        int currentLength{0};
+        int maxLength{0};
+        int consecutiveGaps{0};
+        // Loop on x
+        for (int i = 0; i < qdcarr.size(); ++i) {
+            if (qdcarr[i] != DEFAULT) {
+                // Inside a cluster
+                if (currentStart == -1) {
+                    currentStart = i;
+                }
+                currentEnd = i;
+                currentLength = currentEnd - currentStart + 1;
+
+                // Update longest cluster if needed
+                if (currentLength > maxLength) {
+                    maxLength = currentLength;
+                    longestStart = currentStart;
+                    longestEnd = currentEnd;
+                }
+
+                consecutiveGaps = 0; // Reset consecutive gaps counter
+            } else {
+                // Outside a cluster
+                consecutiveGaps++;
+
+                if (consecutiveGaps > config.SCIFIMAXGAP) {
+                    // Too many consecutive gaps, reset cluster start
+                    currentStart = -1;
+                    currentEnd = -1;
+                }
+            }
+        }
+
+
+        if (maxLength>=config.SCIFITHRESHOLD) {
+        clusterB = longestStart;
+        clusterE = longestEnd;
+	    return true;
+        }
+        else return false;
+       
+    };
+    if (clusterize(qdc.x, hitTimestamps.x, clusterBegin.x, clusterEnd.x) && clusterize(qdc.y, hitTimestamps.y, clusterBegin.y, clusterEnd.y)) {
+	return true;
+    }
+    else {
+	return false;
+    }
+}
+
 void SciFiPlaneView::findCentroid(int windowSize) {
   // find shower centroid position in cm   
   auto slide = [&] (std::array<double, 512> &qdcarr, double &centroidCoordinate) {
@@ -207,3 +265,11 @@ const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getTotQDC() const{
     
     return qdcSum;
 }
+
+  const SciFiPlaneView::xy_pair<int> SciFiPlaneView::getClusterSize() const{
+    xy_pair<int> clSize{-1, -1};
+    clSize.x = clusterEnd.x - clusterBegin.x;
+    clSize.y = clusterEnd.y - clusterBegin.x;
+
+    return clSize;
+  }

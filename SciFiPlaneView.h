@@ -52,8 +52,10 @@ public:
   const xy_pair<std::array<double, 512>> getTime() const;
   const xy_pair<std::array<double, 512>> getQDC() const;
   const xy_pair<double> getTotQDC() const;
+  const xy_pair<int>  getClusterSize() const;
 
   void findCluster();
+  bool infoCluster();
   void findCentroid(int windowSize);
   void timeCut(double referenceTime);
 

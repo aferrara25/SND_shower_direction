@@ -12,7 +12,7 @@ cfg setCfg( bool istb ) {
     config.MUSTATION = 5;
     config.NWALLS = 3;
     config.SCIFITHRESHOLD = 35;
-    config.SCIFIMAXGAP = 1;
+    config.SCIFIMAXGAP = 2;
     config.SCIFISIDECUT = 90;
     config.SCIFIMINHITS = 10;
     config.MUMINHITS = 5;
@@ -53,6 +53,8 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
 
     //plot per station
     for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
+      plots[Form("%s_ClusterSize_st%dX", t, st)] = new TH1D (Form("%s_ClusterSize_st%dX", t, st), Form("%s_ClusterSize_st%dX; cluster size; entries", t, st), nChannels, 0, nChannels);
+      plots[Form("%s_ClusterSize_st%dY", t, st)] = new TH1D (Form("%s_ClusterSize_st%dY", t, st), Form("%s_ClusterSize_st%dY; cluster size; entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
@@ -143,7 +145,7 @@ std::vector<USPlaneView> fillUS(cfg configuration, TClonesArray *mufi_hits){
 int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
   //find start of shower
   for (auto &plane : scifi_planes) {
-    if (plane.sizes().x > plane.getConfig().SCIFITHRESHOLD && plane.sizes().y > plane.getConfig().SCIFITHRESHOLD) return plane.getStation(); 
+    if (plane.infoCluster()) return plane.getStation(); 
   }
   return -1;
 }
@@ -217,6 +219,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     std::array<double, 512> qdcX{plane.getQDC().x};
     std::array<double, 512> qdcY{plane.getQDC().y};
     auto sumScifi = plane.getTotQDC();
+    auto clusterSize{plane.getClusterSize()};
 
     ScifiQDCSum += sumScifi.x;
     ScifiQDCSum += sumScifi.y;
@@ -229,6 +232,9 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_HitsperStation_st%dX", t.c_str(), station)]->Fill(nhitsX);
     plots[Form("%s_HitsperStation_st%dY", t.c_str(), station)]->Fill(nhitsY);
     plots[Form("%s_HitDistribution_st%d", t.c_str(), station)]->Fill(nhitsX, nhitsY);
+    plots[Form("%s_ClusterSize_st%dX", t.c_str(), station)]->Fill(clusterSize.x);
+    plots[Form("%s_ClusterSize_st%dY", t.c_str(), station)]->Fill(clusterSize.y);
+    
     if (station == shStart) {
       showerHits = nhitsX + nhitsY;
     }
@@ -349,7 +355,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     int sf_max=sf_hits->GetEntries();
     int mu_max=mu_hits->GetEntries();
 
-    if (sf_max < 15 && mu_max < 3 ) continue;
+    if (sf_max < 15) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
     auto us_planes = fillUS(configuration, mu_hits);
