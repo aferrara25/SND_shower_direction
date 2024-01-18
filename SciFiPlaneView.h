@@ -56,6 +56,7 @@ public:
 
   void findCluster();
   bool infoCluster();
+  bool infoDensity(int radius, int min_hits);
   void findCentroid(int windowSize);
   void timeCut(double referenceTime);
 

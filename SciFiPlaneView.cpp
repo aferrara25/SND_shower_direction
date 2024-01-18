@@ -179,6 +179,26 @@ bool SciFiPlaneView::infoCluster() {
     }
 }
 
+bool SciFiPlaneView::infoDensity(int radius, int min_hits) {
+
+    if (station == 1 && sizes().x == 1 && sizes().y == 1) {return false;}
+    if (min_hits>radius) {throw std::runtime_error{"min_hits > radius"};}
+    auto density = [&] (std::array<double, 512> &qdcarr) {
+        for (int i{0}; i < 512-radius+1; ++i) {
+            if (std::count_if(qdcarr.begin()+i, qdcarr.begin()+i+radius, [] (double t) {return t > DEFAULT;}) >= min_hits) {
+                return true;
+            }
+        }
+        return false;
+    };
+    if (density(qdc.x) && density(qdc.y)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void SciFiPlaneView::findCentroid(int windowSize) {
   // find shower centroid position in cm   
   auto slide = [&] (std::array<double, 512> &qdcarr, double &centroidCoordinate) {

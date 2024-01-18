@@ -47,6 +47,8 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     const auto t{tag.c_str()};
     //plot per event
     plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 5, 0.5, 5.5);
+    plots[Form("%s_ShowerStart_with_density", t)] = new TH1D(Form("%s_ShowerStart_with_density", t), Form("%s_ShowerStart_with_density; station; entries", t), 5, 0.5, 5.5);
+    plots[Form("%s_ShowerStart_with_F", t)] = new TH1D(Form("%s_ShowerStart_with_F", t), Form("%s_ShowerStart_with_F; station; entries", t), 5, 0.5, 5.5);
     plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
     plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 250, 0, 25000, 250, 0, 9000);
@@ -146,6 +148,30 @@ int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
   //find start of shower
   for (auto &plane : scifi_planes) {
     if (plane.infoCluster()) return plane.getStation(); 
+  }
+  return -1;
+}
+
+int checkShower_with_density(std::vector<SciFiPlaneView> scifi_planes ) {
+  //find start of shower
+  for (auto &plane : scifi_planes) {
+    if (plane.infoDensity(64,60)) return plane.getStation();
+  }
+  return -1;
+}
+
+int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes, double f = 0.17) {
+  SciFiPlaneView::xy_pair<int> previous_hits;
+  int k{0};
+  //find start of shower
+  for (auto &plane : scifi_planes) {
+    if (k>0 && previous_hits.x>0 && previous_hits.y>0) {
+      if (((static_cast<float>(previous_hits.x / (plane.sizes().x + previous_hits.x)) < f) && plane.sizes().x > 15) || ((static_cast<float>(previous_hits.y / (plane.sizes().y + previous_hits.y)) < f) && plane.sizes().y > 15)) {
+        return plane.getStation();
+      }
+    }
+    previous_hits = plane.sizes();
+    k++;
   }
   return -1;
 }
@@ -303,7 +329,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   
   // ##################### Read file #####################
   //int runNumber{100633};  
-  // 100673: pion 100 GeV 3 walls 16 files 
+  // 100677: pion 100 GeV 3 walls 16 files 
   // 100633: pion 140 GeV 3 walls 22 files
   // 100671: pion 180 GeV 3 walls 33 files
   // 100648: pion 240 GeV 3 walls 59 files
@@ -363,6 +389,8 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     //Before cut
     int showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
+    plots[Form("%s_ShowerStart_with_density", tags[0].c_str())]->Fill(checkShower_with_density(scifi_planes));
+    plots[Form("%s_ShowerStart_with_F", tags[0].c_str())]->Fill(checkShower_with_F(scifi_planes));
     for (auto &plane : scifi_planes)  plane.findCentroid(6);
     fillPlots(scifi_planes, us_planes, plots, tags[0], showerStart);
 
@@ -372,6 +400,8 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     showerStart = checkShower(scifi_planes);
 
     plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
+    plots[Form("%s_ShowerStart_with_density", tags[1].c_str())]->Fill(checkShower_with_density(scifi_planes));
+    plots[Form("%s_ShowerStart_with_F", tags[1].c_str())]->Fill(checkShower_with_F(scifi_planes));
     for (auto &plane : scifi_planes) plane.findCentroid(6);
     fillPlots(scifi_planes, us_planes, plots, tags[1], showerStart);
     
@@ -382,6 +412,8 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     }
     showerStart = checkShower(scifi_planes);
     plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
+    plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(checkShower_with_density(scifi_planes));
+    plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(checkShower_with_F(scifi_planes));
     fillPlots(scifi_planes, us_planes, plots, tags[2], showerStart);
     
   }
