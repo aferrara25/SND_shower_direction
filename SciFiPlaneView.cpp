@@ -235,6 +235,7 @@ void SciFiPlaneView::resetHit( bool isVertical, int index){
     }
 }
 
+/*
 void SciFiPlaneView::timeCut (double referenceTime) {
 
     if (station == 1) return;
@@ -245,7 +246,17 @@ void SciFiPlaneView::timeCut (double referenceTime) {
         }
     }
 }
+*/
 
+void SciFiPlaneView::timeCut (double minTime, double maxTime) {
+    if (maxTime < minTime) {
+        throw std::runtime_error{"maxTime < minTime"};
+    }
+    for (int i{0}; i < 512; ++i) {
+        if (hitTimestamps.x[i] < minTime || hitTimestamps.x[i] > maxTime) resetHit(false, i); 
+        if (hitTimestamps.y[i] < minTime || hitTimestamps.y[i] > maxTime) resetHit(true, i);  
+    }
+}
 
 const int SciFiPlaneView::getStation() const {
     return station;

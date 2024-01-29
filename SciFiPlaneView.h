@@ -58,7 +58,7 @@ public:
   bool infoCluster();
   bool infoDensity(int window, int min_hits);
   void findCentroid(int windowSize);
-  void timeCut(double referenceTime);
+  void timeCut(double minTime, double maxTime);
 
 private:
   xy_pair<std::array<double,512>> qdc;

@@ -39,14 +39,20 @@ cfg setCfg( bool istb ) {
 
 
 
-void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags) {
+void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags, std::vector<std::string> &shower_tags) {
   int nChannels = configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; //512 for Test Beam
+  plots["Delta_timestamp"] = new TH1D("Delta_timestamp", "Delta_timestamp; delta_t (ns); entries", 300, 0, 3000);
+
+  for (auto stag : shower_tags) {
+    auto name = Form("%s_%s_vs_%s_%s", tags[1].c_str(), stag.c_str(), tags[2].c_str(), stag.c_str());
+    plots[name] = new TH2D(name, Form("%s; station; station;", name), 8, -2.5, 5.5, 8, -2.5, 5.5);
+  }
   
   for (auto tag : tags) {
 
     const auto t{tag.c_str()};
     //plot per event
-    plots[Form("%s_ShowerStart", t)] = new TH1D(Form("%s_ShowerStart", t), Form("%s_ShowerStart; station; entries", t), 7, -1.5, 5.5);
+    plots[Form("%s_ShowerStart_with_clusters", t)] = new TH1D(Form("%s_ShowerStart_with_clusters", t), Form("%s_ShowerStart_with_clusters; station; entries", t), 7, -1.5, 5.5);
     plots[Form("%s_ShowerStart_with_density", t)] = new TH1D(Form("%s_ShowerStart_with_density", t), Form("%s_ShowerStart_with_density; station; entries", t), 7, -1.5, 5.5);
     plots[Form("%s_ShowerStart_with_F", t)] = new TH1D(Form("%s_ShowerStart_with_F", t), Form("%s_ShowerStart_with_F; station; entries", t), 7, -1.5, 5.5);
     plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
@@ -144,7 +150,7 @@ std::vector<USPlaneView> fillUS(cfg configuration, TClonesArray *mufi_hits){
 
 }
 
-int checkShower(std::vector<SciFiPlaneView> scifi_planes ) {
+int checkShower_with_clusters(std::vector<SciFiPlaneView> scifi_planes ) {
   //find start of shower
   for (auto &plane : scifi_planes) {
     if (plane.infoCluster()) return plane.getStation(); 
@@ -207,7 +213,7 @@ void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> US ) 
     }
     else if (station > 1){
       if (referenceTime == -1) continue;
-      plane.timeCut(referenceTime);
+      plane.timeCut(referenceTime, referenceTime + plane.getConfig().TIMECUT);
     }
   }
   for (auto &plane : US) {
@@ -216,13 +222,39 @@ void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> US ) 
   }
 }
 
+void timeCutGuil (std::vector<SciFiPlaneView> &Scifi) {
+  TH1D* times = new TH1D ("times", "times; clk cycles; entries", 1000, 0, 50);
+
+  for (auto &plane : Scifi) {
+    auto time = plane.getTime();
+    for (int i{0}; i<time.x.size(); ++i) {
+      if (time.x[i]>DEFAULT) {
+        times->Fill(time.x[i]);
+      }
+      if (time.y[i]>DEFAULT) {
+        times->Fill(time.y[i]);
+      }
+    }
+  }
+
+  double referenceTime = times->GetXaxis()->GetBinCenter(times->GetMaximumBin()); // in clk cycles
+
+  for (auto &plane : Scifi) {
+    plane.timeCut(referenceTime - 0.5, referenceTime + 0.5);
+  }
+
+  delete times;
+
+  // No Cut for US at the moment
+}
+
 void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
   int showerHits{0};
   double ScifiQDCSum{0}, partialScifiQDCSum{0};
   double USQDCSum{0};
   double Small_USQDCSum{0}, Large_USQDCSum{0};
   auto refCentroid{Scifi_detector[0].getCentroid()};
-  int showerStart = checkShower(Scifi_detector);
+  int showerStart = checkShower_with_clusters(Scifi_detector);
   
   for (auto plane : Scifi_detector){
     //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
@@ -355,10 +387,15 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   std::vector<std::string> tags;
   tags.push_back("NoCut");
   tags.push_back("Cut");
-  tags.push_back("Cluster");
+  tags.push_back("GuilCut");
+  //tags.push_back("Cluster");
+  std::vector<std::string> shower_tags;
+  shower_tags.push_back("clusters");
+  shower_tags.push_back("density");
+  shower_tags.push_back("F");
 
 
-  definePlots(configuration, plots, counters, tags);
+  definePlots(configuration, plots, counters, tags, shower_tags);
   
   // ##################### Read hits from Scifi and Mufilter  #####################
 
@@ -368,14 +405,30 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   fEventTree->SetBranchAddress("Digi_ScifiHits", &sf_hits);
   auto header = new SNDLHCEventHeader();
   fEventTree->SetBranchAddress("EventHeader.", &header);
-  
+
+  const float TDC2ns{1000/160.316};
+  double last_timestamp{-1};
+  bool is_one_hit = true;
+  bool is_apart = true;
 
   // Loop over events
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
     //if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
-    //if (m >10000) break;
+    //if (m >100) break;
     fEventTree->GetEntry(m);
+
+    // Check timestamp difference with previous event
+    if (last_timestamp != -1) {
+      plots["Delta_timestamp"]->Fill((header->GetEventTime()-last_timestamp)*TDC2ns);
+      if (((header->GetEventTime()-last_timestamp)*TDC2ns) > 150) {
+        is_apart = true;
+      }
+      else {
+        is_apart = false;
+      }
+    }
+    last_timestamp = header->GetEventTime();
 
 
     int sf_max=sf_hits->GetEntries();
@@ -384,38 +437,64 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     if (sf_max < 15) continue;
     
     auto scifi_planes = fillSciFi(configuration, sf_hits);
+    auto scifi_planes_guil = scifi_planes;
     auto us_planes = fillUS(configuration, mu_hits);
 
     //Before cut
-    int showerStart = checkShower(scifi_planes);
-    plots[Form("%s_ShowerStart", tags[0].c_str())]->Fill(showerStart);
+    int showerStart = checkShower_with_clusters(scifi_planes);
+    plots[Form("%s_ShowerStart_with_clusters", tags[0].c_str())]->Fill(showerStart);
     plots[Form("%s_ShowerStart_with_density", tags[0].c_str())]->Fill(checkShower_with_density(scifi_planes));
     plots[Form("%s_ShowerStart_with_F", tags[0].c_str())]->Fill(checkShower_with_F(scifi_planes));
     for (auto &plane : scifi_planes)  plane.findCentroid(6);
     fillPlots(scifi_planes, us_planes, plots, tags[0], showerStart);
 
+    std::vector<int> sh_start(6, -2);
     //After cut
-    if ( !hitCut(scifi_planes) ) continue;
-    timeCut(scifi_planes, us_planes);
-    showerStart = checkShower(scifi_planes);
+    is_one_hit = hitCut(scifi_planes);
+    if (is_one_hit) {
+      timeCut(scifi_planes, us_planes);
+      sh_start[0] = checkShower_with_clusters(scifi_planes);
+      sh_start[1] = checkShower_with_density(scifi_planes);
+      sh_start[2] = checkShower_with_F(scifi_planes);
 
-    plots[Form("%s_ShowerStart", tags[1].c_str())]->Fill(showerStart);
-    plots[Form("%s_ShowerStart_with_density", tags[1].c_str())]->Fill(checkShower_with_density(scifi_planes));
-    plots[Form("%s_ShowerStart_with_F", tags[1].c_str())]->Fill(checkShower_with_F(scifi_planes));
-    for (auto &plane : scifi_planes) plane.findCentroid(6);
-    fillPlots(scifi_planes, us_planes, plots, tags[1], showerStart);
+      plots[Form("%s_ShowerStart_with_clusters", tags[1].c_str())]->Fill(sh_start[0]);
+      plots[Form("%s_ShowerStart_with_density", tags[1].c_str())]->Fill(sh_start[1]);
+      plots[Form("%s_ShowerStart_with_F", tags[1].c_str())]->Fill(sh_start[2]);
+      for (auto &plane : scifi_planes) plane.findCentroid(6);
+      fillPlots(scifi_planes, us_planes, plots, tags[1], sh_start[0]);
+
+    }
+
+    if (is_apart) {
+      timeCutGuil(scifi_planes_guil);
+      sh_start[3] = checkShower_with_clusters(scifi_planes_guil);
+      sh_start[4] = checkShower_with_density(scifi_planes_guil);
+      sh_start[5] = checkShower_with_F(scifi_planes_guil);
+
+      plots[Form("%s_ShowerStart_with_clusters", tags[2].c_str())]->Fill(sh_start[3]);
+      plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
+      plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(sh_start[5]);
+      for (auto &plane : scifi_planes_guil) plane.findCentroid(6);
+      fillPlots(scifi_planes_guil, us_planes, plots, tags[2], sh_start[3]);
+    }
+
+    for (int k{0}; k < shower_tags.size(); ++k) {
+      plots[Form("%s_%s_vs_%s_%s", tags[1].c_str(), shower_tags[k].c_str(), tags[2].c_str(), shower_tags[k].c_str())]->Fill(sh_start[k],sh_start[k+3]);
+    }
+
     
     //After cluster
+    /*
     for (auto &plane : scifi_planes){
       plane.findCluster();
       plane.findCentroid(6);
     }
-    showerStart = checkShower(scifi_planes);
-    plots[Form("%s_ShowerStart", tags[2].c_str())]->Fill(showerStart);
-    plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(checkShower_with_density(scifi_planes));
-    plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(checkShower_with_F(scifi_planes));
-    fillPlots(scifi_planes, us_planes, plots, tags[2], showerStart);
-    
+    showerStart = checkShower_with_clusters(scifi_planes);
+    plots[Form("%s_ShowerStart_with_clusters", tags[3].c_str())]->Fill(showerStart);
+    plots[Form("%s_ShowerStart_with_density", tags[3].c_str())]->Fill(checkShower_with_density(scifi_planes));
+    plots[Form("%s_ShowerStart_with_F", tags[3].c_str())]->Fill(checkShower_with_F(scifi_planes));
+    fillPlots(scifi_planes, us_planes, plots, tags[3], showerStart);
+    */
   }
  
   auto stop = std::chrono::system_clock::now();
