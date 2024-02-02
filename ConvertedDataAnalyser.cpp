@@ -47,6 +47,9 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     auto name = Form("%s_%s_vs_%s_%s", tags[1].c_str(), stag.c_str(), tags[2].c_str(), stag.c_str());
     plots[name] = new TH2D(name, Form("%s; station; station;", name), 8, -2.5, 5.5, 8, -2.5, 5.5);
   }
+
+  auto name = Form("%s_%s_vs_%s_%s", tags[2].c_str(), shower_tags[1].c_str(), tags[2].c_str(), shower_tags[2].c_str());
+  plots[name] = new TH2D(name, Form("%s; station; station;", name), 8, -2.5, 5.5, 8, -2.5, 5.5);
   
   for (auto tag : tags) {
 
@@ -90,8 +93,10 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     }
     // US planes
     for (int pl{1}; pl < 6; ++pl) {
-      plots[Form("%s_US_Timestamps_pl%ds", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%ds", t, pl), Form("%s_US_Timestamps_pl%ds;timestamps (clk cycles);entries", t, pl), 100, -2, 15);
-      plots[Form("%s_US_Timestamps_pl%dl", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%dl", t, pl), Form("%s_US_Timestamps_pl%dl;timestamps (clk cycles);entries", t, pl), 100, -2, 15);
+      plots[Form("%s_US_Timestamps_pl%ds", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%ds", t, pl), Form("%s_US_Timestamps_pl%ds;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);   // -2, 15
+      plots[Form("%s_US_Timestamps_pl%dl", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%dl", t, pl), Form("%s_US_Timestamps_pl%dl;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);   // -2, 15
+      plots[Form("%s_US_Timestamps_vs_QDC_pl%ds", t, pl)] = new TH2D (Form("%s_US_Timestamps_vs_QDC_pl%ds", t, pl), Form("%s_US_Timestamps_vs_QDC_pl%ds;timestamps - tref (clk cycles);qdc (a.u.)", t, pl), 1000, -5, 15, 1000, -20, 300);   
+      plots[Form("%s_US_Timestamps_vs_QDC_pl%dl", t, pl)] = new TH2D (Form("%s_US_Timestamps_vs_QDC_pl%dl", t, pl), Form("%s_US_Timestamps_vs_QDC_pl%dl;timestamps - tref (clk cycles);qdc (a.u.)", t, pl), 1000, -5, 15, 1000, -20, 300);   
     }
   }
 }
@@ -197,7 +202,7 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
   return false;
 }
 
-void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> US ) {
+void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
   double referenceTime{-1};
 
   for (auto &plane : Scifi) {
@@ -222,7 +227,7 @@ void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> US ) 
   }
 }
 
-void timeCutGuil (std::vector<SciFiPlaneView> &Scifi) {
+double timeCutGuil (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
   TH1D* times = new TH1D ("times", "times; clk cycles; entries", 1000, 0, 50);
 
   for (auto &plane : Scifi) {
@@ -245,10 +250,14 @@ void timeCutGuil (std::vector<SciFiPlaneView> &Scifi) {
 
   delete times;
 
-  // No Cut for US at the moment
+  for (auto &plane : US) {
+    plane.timeCut(referenceTime);
+  }
+
+  return referenceTime;
 }
 
-void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart) {
+void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart, double referenceTime=0) {
   int showerHits{0};
   double ScifiQDCSum{0}, partialScifiQDCSum{0};
   double USQDCSum{0};
@@ -327,6 +336,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
   for (auto &plane : US){
     auto sumQDC = plane.getTotQDC();
     auto timesUS = plane.getTime();
+    auto qdc = plane.getQDC();
     int pl = plane.getStation();
     Small_USQDCSum += sumQDC.s;
     Large_USQDCSum += sumQDC.l;
@@ -334,10 +344,12 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     for (int i{0}; i<NCHANNELS; ++i) {
       if (timesUS[i] != DEFAULT) {
         if ((i%16)%8==2 || (i%16)%8==5) {
-          plots[Form("%s_US_Timestamps_pl%ds", t.c_str(), pl)]->Fill(timesUS[i]);
+          plots[Form("%s_US_Timestamps_pl%ds", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime);    ////// TO BE CHANGED
+          plots[Form("%s_US_Timestamps_vs_QDC_pl%ds", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime, qdc[i]);
         }
         else {
-          plots[Form("%s_US_Timestamps_pl%dl", t.c_str(), pl)]->Fill(timesUS[i]);
+          plots[Form("%s_US_Timestamps_pl%dl", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime);    ////// TO BE CHANGED
+          plots[Form("%s_US_Timestamps_vs_QDC_pl%dl", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime, qdc[i]);
         }
       }
     }    
@@ -439,6 +451,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     auto scifi_planes = fillSciFi(configuration, sf_hits);
     auto scifi_planes_guil = scifi_planes;
     auto us_planes = fillUS(configuration, mu_hits);
+    auto us_planes_guil = us_planes;
 
     //Before cut
     int showerStart = checkShower_with_clusters(scifi_planes);
@@ -466,7 +479,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     }
 
     if (is_apart) {
-      timeCutGuil(scifi_planes_guil);
+      double refT = timeCutGuil(scifi_planes_guil, us_planes_guil);
       sh_start[3] = checkShower_with_clusters(scifi_planes_guil);
       sh_start[4] = checkShower_with_density(scifi_planes_guil);
       sh_start[5] = checkShower_with_F(scifi_planes_guil);
@@ -475,12 +488,15 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
       plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
       plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(sh_start[5]);
       for (auto &plane : scifi_planes_guil) plane.findCentroid(6);
-      fillPlots(scifi_planes_guil, us_planes, plots, tags[2], sh_start[3]);
+      fillPlots(scifi_planes_guil, us_planes_guil, plots, tags[2], sh_start[4], refT);
     }
 
     for (int k{0}; k < shower_tags.size(); ++k) {
       plots[Form("%s_%s_vs_%s_%s", tags[1].c_str(), shower_tags[k].c_str(), tags[2].c_str(), shower_tags[k].c_str())]->Fill(sh_start[k],sh_start[k+3]);
     }
+
+    //Guil cut density vs F
+    plots[Form("%s_%s_vs_%s_%s", tags[2].c_str(), shower_tags[1].c_str(), tags[2].c_str(), shower_tags[2].c_str())]->Fill(sh_start[4],sh_start[5]);
 
     
     //After cluster
