@@ -1,12 +1,11 @@
 #include "SciFiPlaneView.h"
 #include <stdexcept>
 
-const double DEFAULT = -999.0;
+const double DEFAULT{-999.0};
 const double FREQ{160.316E6};
 const double TDC2ns = 1E9/FREQ;
 const int NSIPM{8};
 const int NSIDE{2};
-const int NsidesNch{16};
 const int TOFPETperBOARD{8};
 const int TOFPETCHANNELS{64};
 
@@ -17,10 +16,10 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s) :
     if (b > e) {
         throw std::runtime_error{"Begin index > end index"};
     }
-    std::fill(qdc.x.begin(), qdc.x.end(), DEFAULT);
-    std::fill(qdc.y.begin(), qdc.y.end(), DEFAULT);
-    std::fill(hitTimestamps.x.begin(), hitTimestamps.x.end(), DEFAULT);
-    std::fill(hitTimestamps.y.begin(), hitTimestamps.y.end(), DEFAULT);
+    qdc.x.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    qdc.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    hitTimestamps.x.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    hitTimestamps.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
     fillQDC();
     fillTimestamps();
 }
@@ -37,7 +36,9 @@ const SciFiPlaneView::xy_pair<int> SciFiPlaneView::sizes() const{
 
 void SciFiPlaneView::fillQDC() {
     for (int i{begin}; i<end; ++i) {
-        int position = 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+        //std::cout<<"Getchannel(0):\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0)<<"\t GetSiPM():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetSiPM()<<"\t GetSiPMChan()\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetSiPMChan()
+        //<<"\t GetChannelID():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetChannelID()<<"\t GetMat():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat()<<std::endl;
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
         if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
             qdc.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
         }
@@ -49,7 +50,7 @@ void SciFiPlaneView::fillQDC() {
 
 void SciFiPlaneView::fillTimestamps() {
     for (int i{begin}; i<end; ++i) {
-        int position = 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
         if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
             hitTimestamps.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
         }
@@ -62,7 +63,7 @@ void SciFiPlaneView::fillTimestamps() {
 void SciFiPlaneView::findCluster() {
 
     if (station == 1 && sizes().x == 1 && sizes().y == 1) {return;}
-    auto clusterize = [&] (std::array<double, 512> &qdcarr, std::array<double, 512> &timearr, int &clusterB, int &clusterE) {
+    auto clusterize = [&] (std::vector<double> &qdcarr, std::vector<double> &timearr, int &clusterB, int &clusterE) {
         int currentStart{-1};
         int currentEnd{-1};
         int longestStart{-1};
@@ -92,7 +93,7 @@ void SciFiPlaneView::findCluster() {
                 // Outside a cluster
                 consecutiveGaps++;
 
-                if (consecutiveGaps > config.SCIFIMAXGAP) {
+                if (consecutiveGaps > config.SCIFI_GAPCLUSTER) {
                     // Too many consecutive gaps, reset cluster start
                     currentStart = -1;
                     currentEnd = -1;
@@ -100,7 +101,7 @@ void SciFiPlaneView::findCluster() {
             }
         }
 
-        if (maxLength>=config.SCIFITHRESHOLD) {
+        if (maxLength>=config.SCIFI_DIMCLUSTER) {
             clusterB = longestStart;
             clusterE = longestEnd;
         }
@@ -124,7 +125,7 @@ void SciFiPlaneView::findCluster() {
 bool SciFiPlaneView::infoCluster() {
 
     if (station == 1 && sizes().x == 1 && sizes().y == 1) {return false;}
-    auto clusterize = [&] (std::array<double, 512> &qdcarr, std::array<double, 512> &timearr, int &clusterB, int &clusterE) {
+    auto clusterize = [&] (std::vector<double> &qdcarr, std::vector<double> &timearr, int &clusterB, int &clusterE) {
         int currentStart{-1};
         int currentEnd{-1};
         int longestStart{-1};
@@ -154,7 +155,7 @@ bool SciFiPlaneView::infoCluster() {
                 // Outside a cluster
                 consecutiveGaps++;
 
-                if (consecutiveGaps > config.SCIFIMAXGAP) {
+                if (consecutiveGaps > config.SCIFI_GAPCLUSTER) {
                     // Too many consecutive gaps, reset cluster start
                     currentStart = -1;
                     currentEnd = -1;
@@ -163,7 +164,7 @@ bool SciFiPlaneView::infoCluster() {
         }
 
 
-        if (maxLength>=config.SCIFITHRESHOLD) {
+        if (maxLength>=config.SCIFI_DIMCLUSTER) {
         clusterB = longestStart;
         clusterE = longestEnd;
 	    return true;
@@ -183,7 +184,7 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
 
     if (station == 1 && sizes().x == 1 && sizes().y == 1) {return false;}
     if (min_hits>window) {throw std::runtime_error{"min_hits > radius"};}
-    auto density = [&] (std::array<double, 512> &qdcarr) {
+    auto density = [&] (std::vector<double> &qdcarr) {
         for (int i{0}; i < 512-window+1; ++i) {
             if (std::count_if(qdcarr.begin()+i, qdcarr.begin()+i+window, [] (double t) {return t > DEFAULT;}) >= min_hits) {
                 return true;
@@ -201,9 +202,9 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
 
 void SciFiPlaneView::findCentroid(int windowSize) {
   // find shower centroid position in cm   
-  auto slide = [&] (std::array<double, 512> &qdcarr, double &centroidCoordinate) {
+  auto slide = [&] (std::vector<double> &qdcarr, double &centroidCoordinate) {
     double maxSignal{0};    
-    for (int i{0}; i < (config.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS -windowSize); ++i) {      
+    for (int i{0}; i < (config.SCIFI_NCHANNELS - windowSize); ++i) {      
       int off = std::count(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, DEFAULT);
       if (off >= static_cast<int>(2*windowSize/3)) continue;
 
@@ -235,24 +236,11 @@ void SciFiPlaneView::resetHit( bool isVertical, int index){
     }
 }
 
-/*
-void SciFiPlaneView::timeCut (double referenceTime) {
-
-    if (station == 1) return;
-    else {
-        for (int i{0}; i < 512; ++i) {
-        if ( (hitTimestamps.x[i] - referenceTime) > config.TIMECUT) resetHit(false, i); 
-        if ( (hitTimestamps.y[i] - referenceTime) > config.TIMECUT) resetHit(true, i);  
-        }
-    }
-}
-*/
-
 void SciFiPlaneView::timeCut (double minTime, double maxTime) {
     if (maxTime < minTime) {
         throw std::runtime_error{"maxTime < minTime"};
     }
-    for (int i{0}; i < 512; ++i) {
+    for (int i{0}; i < config.SCIFI_NCHANNELS; ++i) {
         if (hitTimestamps.x[i] < minTime || hitTimestamps.x[i] > maxTime) resetHit(false, i); 
         if (hitTimestamps.y[i] < minTime || hitTimestamps.y[i] > maxTime) resetHit(true, i);  
     }
@@ -279,13 +267,13 @@ const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroid() const{
     return c;
 }
 
-const SciFiPlaneView::xy_pair<std::array<double, 512>> SciFiPlaneView::getTime() const{
-    xy_pair<std::array<double, 512>> time{hitTimestamps.x, hitTimestamps.y};
+const SciFiPlaneView::xy_pair<std::vector<double>> SciFiPlaneView::getTime() const{
+    xy_pair<std::vector<double>> time{hitTimestamps.x, hitTimestamps.y};
     return time;
 }
 
-const SciFiPlaneView::xy_pair<std::array<double, 512>> SciFiPlaneView::getQDC() const{
-    xy_pair<std::array<double, 512>> charge{qdc.x, qdc.y};
+const SciFiPlaneView::xy_pair<std::vector<double>> SciFiPlaneView::getQDC() const{
+    xy_pair<std::vector<double>> charge{qdc.x, qdc.y};
     return charge;
 }
 

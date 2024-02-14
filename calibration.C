@@ -1,16 +1,16 @@
 void calibration() {
 
   const int NENERGIES = 5;
-  const double k_fix = 0.0591529; //0.0579034
-  const double alpha_fix = 0.0101064; //0.010421
+  const double k_fix = 0.063194; //0.0617134; //0.0579034
+  const double alpha_fix = 0.0130885; //0.0111385; //0.010421
   double mean_k = 0;
   double mean_a = 0;
   std::array<int, NENERGIES> energies = {100,140,180,240,300};
   std::array<int, NENERGIES> runs = {100631,100673,100672,100647,100645}; // test: {100631,100673,100672,100647,100645} calib: {100677,100633,100671,100648,100639};
-  std::array<double, NENERGIES*3> xmax = {6000,6000,8000, 8000,8000,10000, 11000,12000,14000, 14000,15000,17000, 14000,16000,19000}; 
-  std::array<double, NENERGIES*3> xmin = {500,1000,1500, 1000,1000,2000, 1000,1000,2000, 1000,1000,2500, 1000,1000,3000}; 
-  std::array<double, NENERGIES*3> amax = {19,19,17, 17,17,17, 18,17,20, 20,20,20, 17,18,22}; 
-  std::array<double, NENERGIES*3> amin = {-3,-3,1, 1,3,6, 2,3,8, 2,3,8, 2,7,11}; // *0.001
+  std::array<double, NENERGIES*3> xmax = {5000,6000,7000, 8000,8000,9000, 10000,11000,12000, 12000,12000,14000, 13500,15000,15000}; //{4000,6000,7000, 8000,8000,9000, 10000,11000,12000, 12000,12000,14000, 14000,14000,15000};
+  std::array<double, NENERGIES*3> xmin = {500,1000,2500, 1000,1000,3000, 1000,1000,4000, 1000,1000,4000, 1500,3000,6000}; // {500,500,500, 1000,1000,1500, 1000,1000,1500, 1000,1000,2500, 2000,1000,2500}; 
+  std::array<double, NENERGIES*3> amax = {27,25,22, 21,21,20, 21,21,20, 21,21,25, 21,21,25}; //{25,25,20, 25,25,20, 25,25,20, 20,20,23, 25,25,25};
+  std::array<double, NENERGIES*3> amin = {3,3,5, 3,3,10, 3,3,10, 3,3,12, 3,3,15}; // *0.001 {-3,-3,1, -5,-5,6, -5,-5,8, -5,0,8, -5,0,15};
   TFile* indata[NENERGIES];
   TGraphErrors* graph[3];
   TGraphErrors* gAlpha[3];
@@ -44,6 +44,7 @@ void calibration() {
   TCanvas* c[NENERGIES];
   TCanvas* cAlpha[NENERGIES];
   TCanvas* cEn[NENERGIES];
+  TCanvas* cMarco = new TCanvas("c","c", 1920,1080);
 
   TF1 *fitFunc = new TF1("fitFunc", "[0]*x + [1]");
   fitFunc->SetParameters(-1/4, 4000);
@@ -51,6 +52,9 @@ void calibration() {
   gaus->SetParameters(1800, 12*0.001, 4*0.001);
   TF1 *line = new TF1("line", "[0]*x + [1]", 50, 350);
   line->SetParameters(0, 0);
+
+  TF1 *gausM = new TF1("gaus", "gaus");
+  gausM->SetParameters(12000, 180, 30);
 
 
   TFile* outf = new TFile("calibrations.root","recreate");
@@ -65,13 +69,14 @@ void calibration() {
     cEn[i]->Divide(3,1);
     TH1D* hAlpha[3];
     TH1D* hEn[3];
+    TH1D* hMarco = new TH1D(Form("Reco_En_%iGeV", energies[i]),Form("Reco_En_%iGeV; Reconstructed energy (GeV); entries", energies[i]), 100, 50, 300);
     c[i]->cd(1);
-    ((TH2D*)indata[i]->Get("Cut_QDCUS_vs_QDCScifi"))->DrawClone("colz");
+    ((TH2D*)indata[i]->Get("GuilCut_QDCUS_vs_QDCScifi"))->DrawClone("colz");
     gPad->Modified();
     gPad->Update();
     for (int j{0}; j<3; ++j) {
-      SciFIQDC[3*i+j] = ((TH1F*)indata[i]->Get(Form("Cut_Shower_SciFi_QDC_shStart%i",j+2)))->GetMean();
-      err[3*i+j] = ((TH1F*)indata[i]->Get(Form("Cut_Shower_SciFi_QDC_shStart%i",j+2)))->GetStdDev();
+      SciFIQDC[3*i+j] = ((TH1F*)indata[i]->Get(Form("GuilCut_Shower_SciFi_QDC_shStart%i",j+2)))->GetMean();
+      err[3*i+j] = ((TH1F*)indata[i]->Get(Form("GuilCut_Shower_SciFi_QDC_shStart%i",j+2)))->GetStdDev();
       en[3*i+j] = energies[i] + 5*j;
       graph[j]->SetPoint(i,en[3*i+j],SciFIQDC[3*i+j]);
       graph[j]->SetPointError(i,0,err[3*i+j]);
@@ -79,12 +84,12 @@ void calibration() {
       graph2[i]->SetPointError(j,0,err[3*i+j]);
 
       cAlpha[i]->cd(j+1);
-      TH2D* h = (TH2D*)indata[i]->Get(Form("Cut_QDCUS_vs_QDCScifi_ShStart_st%i",j+2));
+      TH2D* h = (TH2D*)indata[i]->Get(Form("GuilCut_QDCUS_vs_QDCScifi_ShStart_st%i",j+2));
       int nx = h->GetXaxis()->FindBin(xmax[3*i+j]);
       int ny = h->GetYaxis()->GetNbins();
       int nxmax = h->GetXaxis()->GetNbins();
       hAlpha[j] = new TH1D(Form("Alpha_%iGeV_st%i", energies[i], j+2),Form("Alpha_%iGeV_st%i; Alpha (GeV/QDC); entries", energies[i], j+2), 70, -0.02, 0.04);
-      hEn[j] = new TH1D(Form("Reco_En_%iGeV_st%i", energies[i], j+2),Form("Reco_En_%iGeV_st%i; Reconstructed energy (GeV); entries", energies[i], j+2), 200, 0, 500);
+      hEn[j] = new TH1D(Form("Reco_En_%iGeV_st%i", energies[i], j+2),Form("Reco_En_%iGeV_st%i; Reconstructed energy (GeV); entries", energies[i], j+2), 100, 0, 500);
       for (int binX = h->GetXaxis()->FindBin(xmin[3*i+j]); binX <= nx; ++binX) {
         for (int binY = 1; binY <= ny; ++binY) {
             // Access the bin content
@@ -101,7 +106,8 @@ void calibration() {
             double binContent = h->GetBinContent(binX, binY);
             if (binContent>0) {
               double recEn = k_fix*(h->GetYaxis()->GetBinCenter(binY)) + alpha_fix*(h->GetXaxis()->GetBinCenter(binX));
-              hEn[j]->Fill(recEn,binContent);             
+              hEn[j]->Fill(recEn,binContent);
+              if (j<2) {hMarco->Fill(recEn,binContent);}             
             }
         }
       }
@@ -127,11 +133,24 @@ void calibration() {
 
       gErr[j]->SetPoint(i,en[3*i+j],hEn[j]->GetStdDev()/energies[i]*100);
 
+      if (i==2) {
+        cMarco->cd();
+        gStyle->SetOptFit(1011);
+        gStyle->SetOptStat(0);
+        gausM->SetRange(110, 250);
+        //gaus->FixParameter(0,hAlpha[j]->GetMaximum());
+        hMarco->Fit(gausM,"RQ");
+        hMarco->Draw("hist colz");
+
+        gPad->Modified();
+        gPad->Update();
+      }
+
       c[i]->cd(j+2);
       h->SetStats(0);
       gStyle->SetOptFit(1011);
       fitFunc->SetRange(xmin[3*i+j], xmax[3*i+j]);
-      h->Fit(fitFunc,"RQ");      
+      h->Fit(fitFunc,"RQ"); 
       h->DrawClone("colz");
       //fitFunc->Draw("same");
       gPad->Modified();
@@ -154,6 +173,7 @@ void calibration() {
     c[i]->Write();
     cAlpha[i]->Write();
     cEn[i]->Write();
+    cMarco->Write();
     indata[i]->Close();
   }
   
@@ -218,7 +238,7 @@ void calibration() {
   mg3->GetYaxis()->SetTitle("Alpha (GeV/QDC)");
   mg3->GetXaxis()->SetLimits(50,350);
   mg3->SetMinimum(-0.002);
-  mg3->SetMaximum(0.020);
+  mg3->SetMaximum(0.025);
   mg3->Draw("ape");
   c3->BuildLegend();
   c4->cd();

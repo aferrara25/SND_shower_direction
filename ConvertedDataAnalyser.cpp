@@ -4,34 +4,46 @@
 
 #include "Inclusion.h"
 #include "SciFiPlaneView.h"
+#include "USPlaneView.h"
 
 cfg setCfg( bool istb ) {
   cfg config;
   if (istb) {
-    config.SCIFISTATION = 4;
-    config.MUSTATION = 5;
-    config.NWALLS = 3;
-    config.SCIFITHRESHOLD = 35;
-    config.SCIFIMAXGAP = 2;
-    config.SCIFISIDECUT = 90;
-    config.SCIFIMINHITS = 10;
-    config.MUMINHITS = 5;
-    config.BOARDPERSTATION = 1;
-    config.TIMECUT = 1;
-    config.MUTIMECUT = 3;
-    config.SCIFIDIM = 13;
+    config.SCIFI_STATIONS = 4;
+    config.SCIFI_BOARDPERPLANE = 1;
+    config.SCIFI_NCHANNELS = 512;
+    config.SCIFI_TIMECUT = 1;  
+    config.SCIFI_DIMCLUSTER = 35;
+    config.SCIFI_GAPCLUSTER = 2;
+    config.SCIFI_DENSITYWINDOW = 128;
+    config.SCIFI_DENSITYHITS = 36;
+    config.SCIFI_F = 0.17; 
+
+    config.US_STATIONS = 5;
+    config.US_TIMECUT = 3;
+
+    config.SCIFI_DIM = 13;
+
     config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/";
     config.OUTFILENAME = "output/TB_output";
   }
   else {
-    config.SCIFISTATION = 5;
-    config.MUSTATION = 8;
-    config.NWALLS = 5;
-    config.SCIFITHRESHOLD = 56;
-    config.SCIFIMINHITS = 2;
-    config.MUMINHITS = 2;
-    config.BOARDPERSTATION = 3;
-    config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2023/";
+    config.SCIFI_STATIONS = 5;
+    config.SCIFI_BOARDPERPLANE = 3;
+    config.SCIFI_NCHANNELS = 512*3;
+    config.SCIFI_TIMECUT = 1;  
+    config.SCIFI_DIMCLUSTER = 35;
+    config.SCIFI_GAPCLUSTER = 2;
+    config.SCIFI_DENSITYWINDOW = 128;
+    config.SCIFI_DENSITYHITS = 36;
+    config.SCIFI_F = 0.17;
+
+    config.US_STATIONS = 5;
+    config.US_TIMECUT = 3;
+
+    config.SCIFI_DIM = 13*3;
+
+    config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2022/";
     config.OUTFILENAME = "output/TI18_output";
   }
   return config;
@@ -40,7 +52,7 @@ cfg setCfg( bool istb ) {
 
 
 void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags, std::vector<std::string> &shower_tags) {
-  int nChannels = configuration.BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS; //512 for Test Beam
+  int nChannels = configuration.SCIFI_NCHANNELS;
   plots["Delta_timestamp"] = new TH1D("Delta_timestamp", "Delta_timestamp; delta_t (ns); entries", 300, 0, 3000);
 
   for (auto stag : shower_tags) {
@@ -63,38 +75,38 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1500, 0, 20000, 1500, 0, 8000);
 
     //plot per station
-    for (int st = 1; st < configuration.SCIFISTATION+1; ++st){
+    for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
       plots[Form("%s_ClusterSize_st%dX", t, st)] = new TH1D (Form("%s_ClusterSize_st%dX", t, st), Form("%s_ClusterSize_st%dX; cluster size; entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_ClusterSize_st%dY", t, st)] = new TH1D (Form("%s_ClusterSize_st%dY", t, st), Form("%s_ClusterSize_st%dY; cluster size; entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_HitsperStation_st%dX", t, st)] = new TH1D (Form("%s_HitsperStation_%dX", t, st), Form("%s_HitsperStation_%dX;n hit in event;entries", t, st), nChannels, 0, nChannels);
       plots[Form("%s_HitsperStation_st%dY", t, st)] = new TH1D (Form("%s_HitsperStation_%dY", t, st), Form("%s_HitsperStation_%dY;n hit in event;entries", t, st), nChannels, 0, nChannels);
-      plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), 135, -.5, 13);
-      plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), 135, -.5, 13);
+      plots[Form("%s_Position_st%dX", t, st)] = new TH1D(Form("%s_Position_st%dX", t, st), Form("%s_Position_st%dX; x (cm); entries", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
+      plots[Form("%s_Position_st%dY", t, st)] = new TH1D(Form("%s_Position_st%dY", t, st), Form("%s_Position_st%dY; y (cm); entries", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_Signals_st%dX", t, st)] = new TH1D(Form("%s_Signals_st%dX", t, st), Form("%s_Signals_st%dX; qdc (a.u.) ; entries", t, st), 100, -30, 80);
       plots[Form("%s_Signals_st%dY", t, st)] = new TH1D(Form("%s_Signals_st%dY", t, st), Form("%s_Signals_st%dY; qdc (a.u.) ; entries", t, st), 100, -30, 80);
-      plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), 10, 0, 10);
-      plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), 10, 0, 10);
+      plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
+      plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
       plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
       plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 1500, 0, 20000, 1500, 0, 8000);
     }
-    for (int st = 2; st < configuration.SCIFISTATION+1; ++st){
-      plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 26*100, -13, 13);
-      plots[Form("%s_Centroid_Residuals_st%dY", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dY", t, st), Form("%s_Centroid_Residuals_st%dY; y-y_ref (cm);entries", t, st), 26*100, -13, 13);
+    for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
+      plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 2*nChannels + 1, -(nChannels+0.5)*.025, (nChannels+0.5)*.025);
+      plots[Form("%s_Centroid_Residuals_st%dY", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dY", t, st), Form("%s_Centroid_Residuals_st%dY; y-y_ref (cm);entries", t, st), 2*nChannels + 1, -(nChannels+0.5)*.025, (nChannels+0.5)*.025);
     }
-    for (int start_st = 1; start_st < configuration.SCIFISTATION+1; ++start_st){
+    for (int start_st = 1; start_st < configuration.SCIFI_STATIONS+1; ++start_st){
       plots[Form("%s_Shower_SciFi_QDC_shStart%d", t, start_st)] = new TH1D (Form("%s_Shower_SciFi_QDC_shStart%d", t, start_st), Form("%s_Shower_SciFi_QDC_shStart%d; qdc sum (a.u.);entries", t, start_st), 1000, -100, 8000);
-      for (int st = start_st; st < configuration.SCIFISTATION+1; ++st){
+      for (int st = start_st; st < configuration.SCIFI_STATIONS+1; ++st){
         plots[Form("%s_Hits_st%d_start%d", t, st, start_st)] = new TH1D (Form("%s_Hits_st%d_start%d", t, st, start_st), Form("%s_Hits_st%d_start%d;n hit in event;entries", t, st, start_st), nChannels, 0, 2*nChannels);
       }
-      for (int st = start_st+1; st < configuration.SCIFISTATION+1; ++st){
+      for (int st = start_st+1; st < configuration.SCIFI_STATIONS+1; ++st){
         plots[Form("%s_Hits_st%d_vs_start%d", t, st, start_st)] = new TH2D (Form("%s_Hits_st%d_vs_start%d", t, st, start_st), Form("%s_Hits_st%d_vs_start%d;n hit in st%d;n hit in st%d", t, st, start_st, st, start_st), nChannels, 0, 2*nChannels, nChannels, 0, 2*nChannels);
       }
     }
     // US planes
-    for (int pl{1}; pl < 6; ++pl) {
-      plots[Form("%s_US_Timestamps_pl%ds", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%ds", t, pl), Form("%s_US_Timestamps_pl%ds;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);   // -2, 15
-      plots[Form("%s_US_Timestamps_pl%dl", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%dl", t, pl), Form("%s_US_Timestamps_pl%dl;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);   // -2, 15
+    for (int pl{1}; pl < configuration.US_STATIONS + 1; ++pl) {
+      plots[Form("%s_US_Timestamps_pl%ds", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%ds", t, pl), Form("%s_US_Timestamps_pl%ds;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);
+      plots[Form("%s_US_Timestamps_pl%dl", t, pl)] = new TH1D (Form("%s_US_Timestamps_pl%dl", t, pl), Form("%s_US_Timestamps_pl%dl;timestamps - tref (clk cycles);entries", t, pl), 100, -5, 15);
       plots[Form("%s_US_Timestamps_vs_QDC_pl%ds", t, pl)] = new TH2D (Form("%s_US_Timestamps_vs_QDC_pl%ds", t, pl), Form("%s_US_Timestamps_vs_QDC_pl%ds;timestamps - tref (clk cycles);qdc (a.u.)", t, pl), 1000, -5, 15, 1000, -20, 300);   
       plots[Form("%s_US_Timestamps_vs_QDC_pl%dl", t, pl)] = new TH2D (Form("%s_US_Timestamps_vs_QDC_pl%dl", t, pl), Form("%s_US_Timestamps_vs_QDC_pl%dl;timestamps - tref (clk cycles);qdc (a.u.)", t, pl), 1000, -5, 15, 1000, -20, 300);   
     }
@@ -111,7 +123,7 @@ std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits){
 
   int n_sf_hits{sf_hits->GetEntries()};
 
-  for (int st{1}; st <= configuration.SCIFISTATION; ++st) {
+  for (int st{1}; st <= configuration.SCIFI_STATIONS; ++st) {
     begin = count;
     while (count < n_sf_hits &&
            st == static_cast<sndScifiHit *>(sf_hits->At(count))->GetStation()) {
@@ -140,7 +152,7 @@ std::vector<USPlaneView> fillUS(cfg configuration, TClonesArray *mufi_hits){
     ++count;
   }
   //plane count starts from 0
-  for (int pl{0}; pl < 5; ++pl) {
+  for (int pl{0}; pl < configuration.US_STATIONS; ++pl) {
     begin = count;
     while (count < n_mufi_hits &&
            pl == static_cast<MuFilterHit *>(mufi_hits->At(count))->GetPlane() &&
@@ -166,16 +178,17 @@ int checkShower_with_clusters(std::vector<SciFiPlaneView> scifi_planes ) {
 int checkShower_with_density(std::vector<SciFiPlaneView> scifi_planes ) {
   //find start of shower
   for (auto &plane : scifi_planes) {
-    if (plane.infoDensity(128,36)) return plane.getStation();
+    if (plane.infoDensity(plane.getConfig().SCIFI_DENSITYWINDOW, plane.getConfig().SCIFI_DENSITYHITS)) return plane.getStation();
   }
   return -1;
 }
 
-int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes, double f = 0.17) {
+int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes) {
   SciFiPlaneView::xy_pair<int> previous_hits;
   int k{0};
   //find start of shower
   for (auto &plane : scifi_planes) {
+    auto f = plane.getConfig().SCIFI_F;
     if (k>0 && previous_hits.x>0 && previous_hits.y>0) {
       if (((static_cast<float>(previous_hits.x / (plane.sizes().x + previous_hits.x)) < f) && plane.sizes().x > 15) || ((static_cast<float>(previous_hits.y / (plane.sizes().y + previous_hits.y)) < f) && plane.sizes().y > 15)) {
         return plane.getStation();
@@ -192,13 +205,12 @@ int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes, double f = 0.17
 
 bool hitCut (std::vector<SciFiPlaneView> &detector){
   for (auto &plane : detector){
-    if (plane.getStation() == 1 && (plane.sizes().x != 1 || plane.sizes().y !=1 ) ) return false;
-    else if (plane.getStation() > 1){
-      int thr = plane.getConfig().SCIFITHRESHOLD;
+    if (plane.getStation() == 1 && plane.sizes().x == 1 && plane.sizes().y == 1 ) return true;
+    /*else if (plane.getStation() > 1){
+      int thr = plane.getConfig().SCIFI_DIMCLUSTER;
       if (plane.sizes().x > thr && plane.sizes().y > thr) return true;
-    }
+    }*/
   }
-  // if I finish the for loop without finding a plane above threshold return false
   return false;
 }
 
@@ -218,7 +230,7 @@ void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) 
     }
     else if (station > 1){
       if (referenceTime == -1) continue;
-      plane.timeCut(referenceTime, referenceTime + plane.getConfig().TIMECUT);
+      plane.timeCut(referenceTime, referenceTime + plane.getConfig().SCIFI_TIMECUT);
     }
   }
   for (auto &plane : US) {
@@ -263,10 +275,8 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
   double USQDCSum{0};
   double Small_USQDCSum{0}, Large_USQDCSum{0};
   auto refCentroid{Scifi_detector[0].getCentroid()};
-  int showerStart = checkShower_with_clusters(Scifi_detector);
   
   for (auto plane : Scifi_detector){
-    //const int nchannel{plane.getConfig().BOARDPERSTATION*TOFPETperBOARD*TOFPETCHANNELS};
     auto centroid{plane.getCentroid()};
     auto station{plane.getStation()};
     plots[Form("%s_Centroid_Position_st%d", t.c_str(), station)]->Fill(centroid.x, centroid.y);
@@ -281,16 +291,16 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     
     int nhitsX{plane.sizes().x};
     int nhitsY{plane.sizes().y};
-    std::array<double, 512> timeX{plane.getTime().x};
-    std::array<double, 512> timeY{plane.getTime().y};
-    std::array<double, 512> qdcX{plane.getQDC().x};
-    std::array<double, 512> qdcY{plane.getQDC().y};
+    auto timeX{plane.getTime().x};
+    auto timeY{plane.getTime().y};
+    auto qdcX{plane.getQDC().x};
+    auto qdcY{plane.getQDC().y};
     auto sumScifi = plane.getTotQDC();
     auto clusterSize{plane.getClusterSize()};
 
     ScifiQDCSum += sumScifi.x;
     ScifiQDCSum += sumScifi.y;
-    if (station >= showerStart) {
+    if (station >= shStart) {
       partialScifiQDCSum += sumScifi.x;
       partialScifiQDCSum += sumScifi.y;
     } 
@@ -311,7 +321,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     if (shStart != -1 && station > shStart) {
       plots[Form("%s_Hits_st%d_vs_start%d", t.c_str(), station, shStart)]->Fill(nhitsX + nhitsY, showerHits);
     }
-    for (int i{0}; i<512; ++i) {
+    for (int i{0}; i<plane.getConfig().SCIFI_NCHANNELS; ++i) {
       if (qdcX[i] != DEFAULT) {
         plots[Form("%s_Signals_st%dX", t.c_str(), station)]->Fill(qdcX[i]);
         plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
@@ -341,10 +351,10 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     Small_USQDCSum += sumQDC.s;
     Large_USQDCSum += sumQDC.l;
     USQDCSum += (sumQDC.s + sumQDC.l);
-    for (int i{0}; i<NCHANNELS; ++i) {
+    for (int i{0}; i<plane.getConfig().US_NCHANNELS; ++i) {
       if (timesUS[i] != DEFAULT) {
         if ((i%16)%8==2 || (i%16)%8==5) {
-          plots[Form("%s_US_Timestamps_pl%ds", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime);    ////// TO BE CHANGED
+          plots[Form("%s_US_Timestamps_pl%ds", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime);
           plots[Form("%s_US_Timestamps_vs_QDC_pl%ds", t.c_str(), pl)]->Fill(timesUS[i] - referenceTime, qdc[i]);
         }
         else {
@@ -355,9 +365,9 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     }    
   }
   plots[Form("%s_QDCUS_vs_QDCScifi", t.c_str())]->Fill(Large_USQDCSum, ScifiQDCSum);  // only large?
-  if (showerStart > 0) {
-    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), showerStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
-    plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), showerStart)]->Fill(partialScifiQDCSum);
+  if (shStart > 0) {
+    plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
+    plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
 }
 
@@ -372,12 +382,6 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   cfg configuration = setCfg(isTB);
   
   // ##################### Read file #####################
-  //int runNumber{100633};  
-  // 100677: pion 100 GeV 3 walls 16 files 
-  // 100633: pion 140 GeV 3 walls 22 files
-  // 100671: pion 180 GeV 3 walls 33 files
-  // 100648: pion 240 GeV 3 walls 59 files
-  // 100639: pion 300 GeV 3 walls 58 files
 
   auto *fEventTree = new TChain("rawConv");
   TFile* outputFile;
@@ -416,18 +420,26 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   auto sf_hits = new TClonesArray("sndScifiHit");
   fEventTree->SetBranchAddress("Digi_ScifiHits", &sf_hits);
   auto header = new SNDLHCEventHeader();
-  fEventTree->SetBranchAddress("EventHeader.", &header);
+  if (!isTB && runNumber<5422){
+    fEventTree->SetBranchAddress("EventHeader", &header);
+  }
+  else {
+    fEventTree->SetBranchAddress("EventHeader.", &header);
+  }
 
   const float TDC2ns{1000/160.316};
   double last_timestamp{-1};
   bool is_one_hit = true;
   bool is_apart = true;
 
+  //int target{384014};
+
   // Loop over events
   int iMax = fEventTree->GetEntries();
   for ( int m = 0; m < iMax; m++ ){ 
     //if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
-    //if (m >100) break;
+    //if (m >1000) break;
+    //if (m != target) continue;
     fEventTree->GetEntry(m);
 
     // Check timestamp difference with previous event

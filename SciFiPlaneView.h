@@ -11,21 +11,24 @@
 
 struct cfg
 {
-  int SCIFISTATION{-1};
-  int MUSTATION{-1};
-  int NWALLS{-1};
-  int SCIFITHRESHOLD{-1};
-  int SCIFIMAXGAP{-1};
-  int SCIFISIDECUT{-1};
-  int SCIFIMINHITS{999};
-  int MUMINHITS{999};
-  int BOARDPERSTATION{-1};
+  int SCIFI_STATIONS{-1};
+  int SCIFI_BOARDPERPLANE{-1};
+  int SCIFI_NCHANNELS{-1};
+  double SCIFI_TIMECUT{-1};  
+  int SCIFI_DIMCLUSTER{-1};
+  int SCIFI_GAPCLUSTER{-1};
+  int SCIFI_DENSITYWINDOW{-1};
+  int SCIFI_DENSITYHITS{-1};
+  double SCIFI_F{-1}; 
 
-  double TIMECUT{-1};
-  double MUTIMECUT{-1};
+  int US_STATIONS{-1};
+  const int US_NCHANNELS{160};
+  const int US_NSIPM{8};
+  const int US_NSIDES{2};
+  double US_TIMECUT{-1};
 
   //geometry parameters
-  double SCIFIDIM{-1};
+  double SCIFI_DIM{-1};
   
   std::string INFILENAME;
   std::string OUTFILENAME;
@@ -49,8 +52,8 @@ public:
   const int getBegin() const;
   const int getEnd() const;
   const xy_pair<double> getCentroid() const;
-  const xy_pair<std::array<double, 512>> getTime() const;
-  const xy_pair<std::array<double, 512>> getQDC() const;
+  const xy_pair<std::vector<double>> getTime() const;
+  const xy_pair<std::vector<double>> getQDC() const;
   const xy_pair<double> getTotQDC() const;
   const xy_pair<int>  getClusterSize() const;
 
@@ -61,8 +64,8 @@ public:
   void timeCut(double minTime, double maxTime);
 
 private:
-  xy_pair<std::array<double,512>> qdc;
-  xy_pair<std::array<double,512>> hitTimestamps;
+  xy_pair<std::vector<double>> qdc;
+  xy_pair<std::vector<double>> hitTimestamps;
   xy_pair<int> clusterBegin;
   xy_pair<int> clusterEnd;
   xy_pair<double> centroid;
@@ -70,9 +73,9 @@ private:
   int begin{};
   int end{};
   int station{};
+  cfg config;
 
   TClonesArray *sf_hits{nullptr};
-  cfg config;
 
   void fillQDC();
   void fillTimestamps();
