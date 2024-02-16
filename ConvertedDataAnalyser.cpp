@@ -32,10 +32,10 @@ cfg setCfg( bool istb ) {
     config.SCIFI_BOARDPERPLANE = 3;
     config.SCIFI_NCHANNELS = 512*3;
     config.SCIFI_TIMECUT = 1;  
-    config.SCIFI_DIMCLUSTER = 35;
+    config.SCIFI_DIMCLUSTER = 18;
     config.SCIFI_GAPCLUSTER = 2;
     config.SCIFI_DENSITYWINDOW = 128;
-    config.SCIFI_DENSITYHITS = 36;
+    config.SCIFI_DENSITYHITS = 18;
     config.SCIFI_F = 0.17;
 
     config.US_STATIONS = 5;
@@ -371,12 +371,14 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
   }
 }
 
-void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false) //(int runN, int partN)
+void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
 {
 
   auto start = std::chrono::system_clock::now();
   auto now = std::chrono::system_clock::to_time_t(start);
-  std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
+  if (target == -1){
+    std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
+  }
 
   // ##################### Set right parameters for data type (TB/TI18) #####################
   cfg configuration = setCfg(isTB);
@@ -385,15 +387,18 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
 
   auto *fEventTree = new TChain("rawConv");
   TFile* outputFile;
+  //TFile *treeFile; = new TFile("tree.root", "RECREATE");
   if (isMulticore){
     fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, nFiles));
     outputFile = new TFile(Form("%sRun_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
+    //treeFile = new TFile(Form("%s_tree_Run_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
   }
   else {
     for (int i = 0; i<nFiles; ++i){
       fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, i)); 
     }
     outputFile = new TFile(Form("%sRun_%d.root", configuration.OUTFILENAME.c_str(), runNumber), "RECREATE");
+    //treeFile = new TFile(Form("%s_tree_Run_%d.root", configuration.OUTFILENAME.c_str(), runNumber), "RECREATE");
   }
  
   outputFile->cd();
@@ -427,19 +432,33 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
     fEventTree->SetBranchAddress("EventHeader.", &header);
   }
 
+  // ###################### Create tree to store shower tagging info   ####################
+
+  TTree *tree = new TTree("ShowerTags", "ShowerTags");
+  Int_t run_number, event_number, wall;
+  tree->Branch("run_number", &run_number);
+  tree->Branch("event_number", &event_number);
+  tree->Branch("wall", &wall);
+  run_number = runNumber;
+
   const float TDC2ns{1000/160.316};
   double last_timestamp{-1};
   bool is_one_hit = true;
   bool is_apart = true;
-
-  //int target{384014};
+  int first{target};
+  int last{target+1};
 
   // Loop over events
+  
   int iMax = fEventTree->GetEntries();
-  for ( int m = 0; m < iMax; m++ ){ 
+  if (target == -1) {
+    first = 0;
+    last = iMax;
+  }
+  //for ( int m = 0; m < iMax; m++ ){ 
+  for ( int m = first; m < last; m++ ){ 
     //if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
     //if (m >1000) break;
-    //if (m != target) continue;
     fEventTree->GetEntry(m);
 
     // Check timestamp difference with previous event
@@ -496,6 +515,20 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
       sh_start[4] = checkShower_with_density(scifi_planes_guil);
       sh_start[5] = checkShower_with_F(scifi_planes_guil);
 
+      if (target != -1){
+        std::cout<<"RUN "<<runNumber<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
+      }
+      if (sh_start[4] > 0 && isTB) {
+        event_number = header->GetEventNumber();
+        wall = sh_start[4] - 1;
+        tree->Fill();
+      }
+      if (sh_start[4] > 0 && !isTB) {
+        event_number = header->GetEventNumber();
+        wall = sh_start[4];
+        tree->Fill();
+      }
+
       plots[Form("%s_ShowerStart_with_clusters", tags[2].c_str())]->Fill(sh_start[3]);
       plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
       plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(sh_start[5]);
@@ -528,7 +561,9 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false)
   auto stop = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = stop-start;
   auto end = std::chrono::system_clock::to_time_t(stop);
-  std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
+  if (target == -1){
+    std::cout << "\nDone: " << std::ctime(&end)  << std::endl;
+  }
 
   // ##################### Write results to file #####################
   outputFile->Write();
