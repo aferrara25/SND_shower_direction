@@ -6,7 +6,7 @@
 #include "SciFiPlaneView.h"
 #include "USPlaneView.h"
 
-cfg setCfg( bool istb ) {
+cfg setCfg( bool istb, int runN ) {
   cfg config;
   if (istb) {
     config.SCIFI_STATIONS = 4;
@@ -42,8 +42,12 @@ cfg setCfg( bool istb ) {
     config.US_TIMECUT = 3;
 
     config.SCIFI_DIM = 13*3;
-
-    config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2022/";
+    if (runN < 5422) {
+      config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2022/";
+    }
+    else {
+      config.INFILENAME = "root://eospublic.cern.ch//eos/experiment/sndlhc/convertedData/physics/2023/";
+    }
     config.OUTFILENAME = "output/TI18_output";
   }
   return config;
@@ -73,6 +77,8 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
     plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
     plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1500, 0, 20000, 1500, 0, 8000);
+    plots[Form("%s_Shower_development_X", t)] = new TH2D(Form("%s_Shower_development_X", t), Form("%s_Shower_development_X; x (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
+    plots[Form("%s_Shower_development_Y", t)] = new TH2D(Form("%s_Shower_development_Y", t), Form("%s_Shower_development_Y; y (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
 
     //plot per station
     for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
@@ -189,7 +195,7 @@ int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes) {
   //find start of shower
   for (auto &plane : scifi_planes) {
     auto f = plane.getConfig().SCIFI_F;
-    if (k>0 && previous_hits.x>0 && previous_hits.y>0) {
+    if (k>0 && plane.sizes().x>0 && plane.sizes().y>0) { // && previous_hits.x>0 && previous_hits.y>0
       if (((static_cast<float>(previous_hits.x / (plane.sizes().x + previous_hits.x)) < f) && plane.sizes().x > 15) || ((static_cast<float>(previous_hits.y / (plane.sizes().y + previous_hits.y)) < f) && plane.sizes().y > 15)) {
         return plane.getStation();
       }
@@ -326,6 +332,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
         plots[Form("%s_Signals_st%dX", t.c_str(), station)]->Fill(qdcX[i]);
         plots[Form("%s_Times", t.c_str())]->Fill(timeX[i]);
         plots[Form("%s_Position_st%dX", t.c_str(), station)]->Fill(i*0.025);
+        ((TH2D*)plots[Form("%s_Shower_development_X", t.c_str())])->Fill(i*0.025, station + std::min(timeX[i],4.99)/5, qdcX[i]); 
         plots[Form("%s_Tofpet_st%dX", t.c_str(), station)]->Fill(static_cast<int>(i/64));
         if (station == 1 && nhitsX == 1 && nhitsY == 1){
           refCentroid.x = i*0.025;
@@ -335,6 +342,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
         plots[Form("%s_Signals_st%dY", t.c_str(), station)]->Fill(qdcY[i]);
         plots[Form("%s_Times", t.c_str())]->Fill(timeY[i]);
         plots[Form("%s_Position_st%dY", t.c_str(), station)]->Fill(i*0.025);
+        ((TH2D*)plots[Form("%s_Shower_development_Y", t.c_str())])->Fill(i*0.025, station + std::min(timeY[i],4.99)/5, qdcY[i]);
         plots[Form("%s_Tofpet_st%dY", t.c_str(), station)]->Fill(static_cast<int>(i/64));
         if (station == 1 && nhitsX == 1 && nhitsY == 1){
           refCentroid.y = i*0.025;
@@ -369,6 +377,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
+  std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
@@ -381,7 +390,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   }
 
   // ##################### Set right parameters for data type (TB/TI18) #####################
-  cfg configuration = setCfg(isTB);
+  cfg configuration = setCfg(isTB, runNumber);
   
   // ##################### Read file #####################
 
@@ -516,7 +525,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
       sh_start[5] = checkShower_with_F(scifi_planes_guil);
 
       if (target != -1){
-        std::cout<<"RUN "<<runNumber<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
+        std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
       }
       if (sh_start[4] > 0 && isTB) {
         event_number = header->GetEventNumber();

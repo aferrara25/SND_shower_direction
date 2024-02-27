@@ -38,7 +38,16 @@ void SciFiPlaneView::fillQDC() {
     for (int i{begin}; i<end; ++i) {
         //std::cout<<"Getchannel(0):\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0)<<"\t GetSiPM():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetSiPM()<<"\t GetSiPMChan()\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetSiPMChan()
         //<<"\t GetChannelID():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetChannelID()<<"\t GetMat():\t"<<static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat()<<std::endl;
+        auto hit = static_cast<sndScifiHit *>(sf_hits->At(i));
+        int mat = hit->GetMat();
+        int sipm = hit->GetSiPM();
+        int channel = hit->GetSiPMChan();
+        int new_pos = channel + sipm*128 + mat*512;
         int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+        if (position != new_pos) {
+            std::cout<<"mat:\t"<<mat<<"\t sipm:\t"<<sipm<<"\t channel:\t"<<channel<<"\t new:\t"<< new_pos <<"\t old:\t"<<position<<"\n";
+        }
+        
         if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
             qdc.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
         }
@@ -185,7 +194,7 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
     if (station == 1 && sizes().x == 1 && sizes().y == 1) {return false;}
     if (min_hits>window) {throw std::runtime_error{"min_hits > radius"};}
     auto density = [&] (std::vector<double> &qdcarr) {
-        for (int i{0}; i < 512-window+1; ++i) {
+        for (int i{0}; i < config.SCIFI_NCHANNELS-window+1; ++i) {
             if (std::count_if(qdcarr.begin()+i, qdcarr.begin()+i+window, [] (double t) {return t > DEFAULT;}) >= min_hits) {
                 return true;
             }
