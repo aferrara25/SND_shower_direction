@@ -6,7 +6,7 @@ void calibration() {
   double mean_k = 0;
   double mean_a = 0;
   std::array<int, NENERGIES> energies = {100,140,180,240,300};
-  std::array<int, NENERGIES> runs = {100631,100673,100672,100647,100645}; // test: {100631,100673,100672,100647,100645} calib: {100677,100633,100671,100648,100639};
+  std::array<int, NENERGIES> runs = {100677,100633,100671,100648,100639}; // test: {100631,100673,100672,100647,100645} calib: {100677,100633,100671,100648,100639};
   std::array<double, NENERGIES*3> xmax = {5000,6000,7000, 8000,8000,9000, 10000,11000,12000, 12000,12000,14000, 13500,15000,15000}; //{4000,6000,7000, 8000,8000,9000, 10000,11000,12000, 12000,12000,14000, 14000,14000,15000};
   std::array<double, NENERGIES*3> xmin = {500,1000,2500, 1000,1000,3000, 1000,1000,4000, 1000,1000,4000, 1500,3000,6000}; // {500,500,500, 1000,1000,1500, 1000,1000,1500, 1000,1000,2500, 2000,1000,2500}; 
   std::array<double, NENERGIES*3> amax = {27,25,22, 21,21,20, 21,21,20, 21,21,25, 21,21,25}; //{25,25,20, 25,25,20, 25,25,20, 20,20,23, 25,25,25};
@@ -18,6 +18,7 @@ void calibration() {
   TGraphErrors* gEnrel[3];
   TGraphErrors* gErr[3];
   TGraphErrors* gK[3];
+  TGraphErrors* gUS[3];
   for (int k{0}; k<3; ++k) {
     graph[k] = new TGraphErrors();
     graph[k]->SetTitle(Form("start_in_SciFi%i",k+2));
@@ -31,11 +32,16 @@ void calibration() {
     gEnrel[k]->SetTitle(Form("start_in_SciFi%i",k+2));
     gErr[k] = new TGraphErrors();
     gErr[k]->SetTitle(Form("start_in_SciFi%i",k+2));
+    gUS[k] = new TGraphErrors();
+    gUS[k]->SetTitle(Form("start_in_SciFi%i",k+2));
   }
   TGraphErrors* graph2[NENERGIES];
+  TGraphErrors* gRatio[NENERGIES];
   for (int k{0}; k<NENERGIES; ++k) {
     graph2[k] = new TGraphErrors();
     graph2[k]->SetTitle(Form("%i GeV",energies[k]));
+    gRatio[k] = new TGraphErrors();
+    gRatio[k]->SetTitle(Form("%i GeV",energies[k]));
   }
   double en[NENERGIES*3];
   double SciFIQDC[NENERGIES*3];
@@ -45,6 +51,11 @@ void calibration() {
   TCanvas* cAlpha[NENERGIES];
   TCanvas* cEn[NENERGIES];
   TCanvas* cMarco = new TCanvas("c","c", 1920,1080);
+  TCanvas* cRatioWall[NENERGIES];
+  TCanvas* cRatioEn = new TCanvas("cRatioEn","cRatioEn", 1920,1080);
+  TH2D* hRatioWall[NENERGIES];
+  TH2D* hRatioEn = new TH2D("Scifi/E_reco vs E_reco","Scifi/US vs E_reco; E_reco (GeV); SciFi/E_reco (a.u.)", 350, 0, 350, 200, -1, 1);
+  
 
   TF1 *fitFunc = new TF1("fitFunc", "[0]*x + [1]");
   fitFunc->SetParameters(-1/4, 4000);
@@ -60,13 +71,15 @@ void calibration() {
   TFile* outf = new TFile("calibrations.root","recreate");
   for (int i{0}; i<NENERGIES; ++i) {
     std::cout<<i<<"\n";
-    indata[i] = new TFile(Form("calib/TB_outputRun_%i.root",runs[i]),"read");
+    indata[i] = new TFile(Form("calib_collab/TB_outputRun_%i.root",runs[i]),"read");
     c[i] = new TCanvas(Form("US QDC vs SciFi QDC %i GeV",energies[i]),Form("US QDC vs SciFi QDC %i GeV",energies[i]), 1920,1080);
     c[i]->Divide(2,2);
     cAlpha[i] = new TCanvas(Form("Alpha %i GeV",energies[i]),Form("Alpha %i GeV",energies[i]), 1920,1080);
     cAlpha[i]->Divide(3,1);
     cEn[i] = new TCanvas(Form("Reconstructed Energy %i GeV",energies[i]),Form("Reconstructed Energy %i GeV",energies[i]), 1920,1080);
     cEn[i]->Divide(3,1);
+    cRatioWall[i] = new TCanvas(Form("cRatioWall %i GeV",energies[i]),Form("cRatioWall %i GeV",energies[i]), 1920,1080);
+    hRatioWall[i] = new TH2D(Form("Scifi/E_reco vs starting wall %i GeV",energies[i]),Form("Scifi/E_reco vs starting wall %i GeV; starting wall; SciFi/E_reco (a.u.)", energies[i]), 3, 0.5, 3.5, 200, -1, 1);
     TH1D* hAlpha[3];
     TH1D* hEn[3];
     TH1D* hMarco = new TH1D(Form("Reco_En_%iGeV", energies[i]),Form("Reco_En_%iGeV; Reconstructed energy (GeV); entries", energies[i]), 100, 50, 300);
@@ -88,6 +101,11 @@ void calibration() {
       int nx = h->GetXaxis()->FindBin(xmax[3*i+j]);
       int ny = h->GetYaxis()->GetNbins();
       int nxmax = h->GetXaxis()->GetNbins();
+
+      TH1D* h1D = h->ProjectionX("h1D", 0, ny);
+      gUS[j]->SetPoint(i,en[3*i+j],h1D->GetMean());
+      gUS[j]->SetPointError(i,0,h1D->GetStdDev());
+      
       hAlpha[j] = new TH1D(Form("Alpha_%iGeV_st%i", energies[i], j+2),Form("Alpha_%iGeV_st%i; Alpha (GeV/QDC); entries", energies[i], j+2), 70, -0.02, 0.04);
       hEn[j] = new TH1D(Form("Reco_En_%iGeV_st%i", energies[i], j+2),Form("Reco_En_%iGeV_st%i; Reconstructed energy (GeV); entries", energies[i], j+2), 100, 0, 500);
       for (int binX = h->GetXaxis()->FindBin(xmin[3*i+j]); binX <= nx; ++binX) {
@@ -95,7 +113,9 @@ void calibration() {
             // Access the bin content
             double binContent = h->GetBinContent(binX, binY);
             if (binContent>0) {
-              double a = (energies[i] - k_fix*(h->GetYaxis()->GetBinCenter(binY)))/(h->GetXaxis()->GetBinCenter(binX));
+              double scifiQ = h->GetYaxis()->GetBinCenter(binY);
+              double USQ = h->GetXaxis()->GetBinCenter(binX);
+              double a = (energies[i] - k_fix * scifiQ)/USQ;
               hAlpha[j]->Fill(a,binContent);             
             }
         }
@@ -105,8 +125,14 @@ void calibration() {
             // Access the bin content
             double binContent = h->GetBinContent(binX, binY);
             if (binContent>0) {
+              double scifiQ = h->GetYaxis()->GetBinCenter(binY);
+              double USQ = h->GetXaxis()->GetBinCenter(binX);
               double recEn = k_fix*(h->GetYaxis()->GetBinCenter(binY)) + alpha_fix*(h->GetXaxis()->GetBinCenter(binX));
               hEn[j]->Fill(recEn,binContent);
+              if (recEn>0) {
+                hRatioWall[i]->Fill(j+1, scifiQ*k_fix/recEn);
+                hRatioEn->Fill(recEn, scifiQ*k_fix/recEn);
+              }
               if (j<2) {hMarco->Fill(recEn,binContent);}             
             }
         }
@@ -174,6 +200,22 @@ void calibration() {
     cAlpha[i]->Write();
     cEn[i]->Write();
     cMarco->Write();
+    cRatioWall[i]->cd();
+    hRatioWall[i]->Draw("colz");
+    gStyle->SetOptStat("ne");
+    TPaveStats* stats = (TPaveStats*)hRatioWall[i]->FindObject("stats");
+    stats->SetX1NDC(0.1);
+    stats->SetX2NDC(0.3);
+    stats->SetY1NDC(0.0);
+    stats->SetY2NDC(0.2);
+    hRatioWall[i]->SetStats(1);
+    hRatioWall[i]->Draw("colz");
+    cRatioWall[i]->Write();
+    for (int x{0}; x<3; ++x) {
+      TH1D* hist1D = hRatioWall[i]->ProjectionY("hist1D", x+1, x+1);
+      gRatio[i]->SetPoint(x,x+0.8+0.1*i,hist1D->GetMean());
+      gRatio[i]->SetPointError(x,0,hist1D->GetStdDev());
+    }
     indata[i]->Close();
   }
   
@@ -184,6 +226,8 @@ void calibration() {
   TCanvas* c5 = new TCanvas("E_reco - E","E_reco - E", 1920,1080);
   TCanvas* c6 = new TCanvas("Relative energy resolution","Relative energy resolution", 1920,1080);
   TCanvas* c7 = new TCanvas("(E_reco - E)/E","(E_reco - E)/E", 1920,1080);
+  TCanvas* c8 = new TCanvas("Scifi/E_reco vs starting wall","Scifi/E_reco vs starting wall", 1920,1080);
+  TCanvas* c9 = new TCanvas("US QDC vs Energy","US QDC vs Energy", 1920,1080);
   TMultiGraph *mg = new TMultiGraph();
   TMultiGraph *mg2 = new TMultiGraph();
   TMultiGraph *mg3 = new TMultiGraph();
@@ -191,6 +235,8 @@ void calibration() {
   TMultiGraph *mg5 = new TMultiGraph();
   TMultiGraph *mg6 = new TMultiGraph();
   TMultiGraph *mg7 = new TMultiGraph();
+  TMultiGraph *mg8 = new TMultiGraph();
+  TMultiGraph *mg9 = new TMultiGraph();
 
   for (int k{0}; k<3; ++k) {
     graph[k]->SetMarkerColor(colors[k]);
@@ -211,11 +257,17 @@ void calibration() {
     gEnrel[k]->SetMarkerColor(colors[k]);
     gEnrel[k]->SetMarkerStyle(21);
     mg7->Add(gEnrel[k]);
+    gUS[k]->SetMarkerColor(colors[k]);
+    gUS[k]->SetMarkerStyle(21);
+    mg9->Add(gUS[k]);
   }
-    for (int k{0}; k<NENERGIES; ++k) {
+  for (int k{0}; k<NENERGIES; ++k) {
     graph2[k]->SetMarkerColor(colors[k]);
     graph2[k]->SetMarkerStyle(21);
     mg2->Add(graph2[k]);
+    gRatio[k]->SetMarkerColor(colors[k]);
+    gRatio[k]->SetMarkerStyle(21);
+    mg8->Add(gRatio[k]);
   }
   c1->cd();
   mg->GetXaxis()->SetTitle("pion energy (GeV)");
@@ -275,6 +327,25 @@ void calibration() {
   mg7->Draw("ape");
   c7->BuildLegend();
   line->Draw("same");
+  c8->cd();
+  mg8->GetXaxis()->SetTitle("shower start");
+  mg8->GetYaxis()->SetTitle("Scifi/E_reco (a.u.)");
+  mg8->GetXaxis()->SetLimits(0.5,3.5);
+  mg8->SetMinimum(0.0);
+  mg8->SetMaximum(1.0);
+  mg8->Draw("ape");
+  c8->BuildLegend();
+  c9->cd();
+  mg9->GetXaxis()->SetTitle("pion energy (GeV)");
+  mg9->GetYaxis()->SetTitle("mean US QDC (a.u.)");
+  mg9->GetXaxis()->SetLimits(50,350);
+  mg9->SetMinimum(0.0);
+  mg9->SetMaximum(14000.0);
+  mg9->Draw("ape");
+  c9->BuildLegend();
+  cRatioEn->cd();
+  hRatioEn->Draw("colz");
+  gStyle->SetOptStat("ne");
   outf->cd();
   c1->Write();
   c2->Write();
@@ -283,6 +354,10 @@ void calibration() {
   c5->Write();
   c6->Write();
   c7->Write();
+  c8->Write();
+  c9->Write();
+  hRatioEn->Write();
+
   outf->Close();
   std::cout<<"k:\t"<<mean_k<<"\na:\t"<<mean_a<<"\n";
 }

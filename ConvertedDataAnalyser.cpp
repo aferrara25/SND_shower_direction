@@ -74,9 +74,9 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_ShowerStart_with_clusters", t)] = new TH1D(Form("%s_ShowerStart_with_clusters", t), Form("%s_ShowerStart_with_clusters; station; entries", t), 7, -1.5, 5.5);
     plots[Form("%s_ShowerStart_with_density", t)] = new TH1D(Form("%s_ShowerStart_with_density", t), Form("%s_ShowerStart_with_density; station; entries", t), 7, -1.5, 5.5);
     plots[Form("%s_ShowerStart_with_F", t)] = new TH1D(Form("%s_ShowerStart_with_F", t), Form("%s_ShowerStart_with_F; station; entries", t), 7, -1.5, 5.5);
-    plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 60, -5, 25);
+    plots[Form("%s_Times", t)] = new TH1D(Form("%s_Times", t), Form("%s_Times; time (clk cycles) ; entries", t), 600, -5, 25);
     plots[Form("%s_Station", t)] = new TH1D(Form("%s_Station", t), Form("%s_Station; station ; entries", t), 6, -0.5, 5.5);
-    plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1500, 0, 20000, 1500, 0, 8000);
+    plots[Form("%s_QDCUS_vs_QDCScifi", t)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi", t), Form("%s_QDCUS_vs_QDCScifi; US qdc; SciFi qdc;", t), 1500, -1000, 20000, 1500, -1000, 8000);
     plots[Form("%s_Shower_development_X", t)] = new TH2D(Form("%s_Shower_development_X", t), Form("%s_Shower_development_X; x (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
     plots[Form("%s_Shower_development_Y", t)] = new TH2D(Form("%s_Shower_development_Y", t), Form("%s_Shower_development_Y; y (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
 
@@ -94,7 +94,7 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
       plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
-      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 1500, 0, 20000, 1500, 0, 8000);
+      plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 1500, -1000, 20000, 1500, -1000, 8000);
     }
     for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
       plots[Form("%s_Centroid_Residuals_st%dX", t, st)] = new TH1D (Form("%s_Centroid_Residuals_st%dX", t, st), Form("%s_Centroid_Residuals_st%dX; x-x_ref (cm);entries", t, st), 2*nChannels + 1, -(nChannels+0.5)*.025, (nChannels+0.5)*.025);
@@ -377,7 +377,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
-  std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
+  //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
@@ -524,9 +524,9 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
       sh_start[4] = checkShower_with_density(scifi_planes_guil);
       sh_start[5] = checkShower_with_F(scifi_planes_guil);
 
-      if (target != -1){
-        std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
-      }
+      // if (target != -1){
+      //   std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
+      // }
       if (sh_start[4] > 0 && isTB) {
         event_number = header->GetEventNumber();
         wall = sh_start[4] - 1;

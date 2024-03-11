@@ -1,35 +1,5 @@
 import ROOT
 
-def plot_histograms(root_files, output_pdf):
-    # Create a Canvas to draw histograms
-    canvas = ROOT.TCanvas("canvas", "Histograms", 800, 600)
-    canvas.Print(output_pdf + "[")
-
-    # Loop through each root file
-    for root_file in root_files:
-        file = ROOT.TFile(root_file)
-
-        # Get histograms from the file
-        hist_names = ["NoCut_Shower_development_X", "NoCut_Shower_development_Y", "GuilCut_Shower_development_X", "GuilCut_Shower_development_Y"]
-
-        # Plot histograms
-        for i, hist_name in enumerate(hist_names):
-            if i % 4 == 0:
-                canvas.Clear()
-                canvas.Divide(2, 2)
-
-            canvas.cd(i % 4 + 1)
-            hist = file.Get(hist_name)
-            hist.Draw("COLZ0")
-
-            if (i + 1) % 4 == 0 or i == len(hist_names) - 1:
-                canvas.Print(output_pdf)
-
-        file.Close()
-
-    canvas.Print(output_pdf + "]")
-
-
 def plot_histograms_root(root_files, output_root, runs, filen):
 
     # Create a ROOT file to save histograms
@@ -46,6 +16,7 @@ def plot_histograms_root(root_files, output_root, runs, filen):
         # Plot histograms
         for i, hist_name in enumerate(hist_names):
             hist = file.Get(hist_name)
+            hist.GetZaxis().SetTitle("qdc (a.u.)")
             if i % 4 == 0:
                 canvas.Clear()
                 canvas.Divide(2, 2)
@@ -55,8 +26,8 @@ def plot_histograms_root(root_files, output_root, runs, filen):
             hist.Draw("COLZ0")
             ROOT.gStyle.SetOptStat("ne")
             stats = hist.FindObject("stats")
-            stats.SetX1NDC(0.7)
-            stats.SetX2NDC(0.9)
+            stats.SetX1NDC(0.1)
+            stats.SetX2NDC(0.3)
             stats.SetY1NDC(0.0)
             stats.SetY2NDC(0.2)
 
