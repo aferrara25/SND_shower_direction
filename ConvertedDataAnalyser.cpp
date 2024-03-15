@@ -443,12 +443,12 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
 
   // ###################### Create tree to store shower tagging info   ####################
 
-  TTree *tree = new TTree("ShowerTags", "ShowerTags");
-  Int_t run_number, event_number, wall;
-  tree->Branch("run_number", &run_number);
-  tree->Branch("event_number", &event_number);
-  tree->Branch("wall", &wall);
-  run_number = runNumber;
+  // TTree *tree = new TTree("ShowerTags", "ShowerTags");
+  // Int_t run_number, event_number, wall;
+  // tree->Branch("run_number", &run_number);
+  // tree->Branch("event_number", &event_number);
+  // tree->Branch("wall", &wall);
+  // run_number = runNumber;
 
   const float TDC2ns{1000/160.316};
   double last_timestamp{-1};
@@ -527,16 +527,16 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
       // if (target != -1){
       //   std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
       // }
-      if (sh_start[4] > 0 && isTB) {
-        event_number = header->GetEventNumber();
-        wall = sh_start[4] - 1;
-        tree->Fill();
-      }
-      if (sh_start[4] > 0 && !isTB) {
-        event_number = header->GetEventNumber();
-        wall = sh_start[4];
-        tree->Fill();
-      }
+      // if (sh_start[4] > 0 && isTB) {
+      //   event_number = header->GetEventNumber();
+      //   wall = sh_start[4] - 1;
+      //   tree->Fill();
+      // }
+      // if (sh_start[4] > 0 && !isTB) {
+      //   event_number = header->GetEventNumber();
+      //   wall = sh_start[4];
+      //   tree->Fill();
+      // }
 
       plots[Form("%s_ShowerStart_with_clusters", tags[2].c_str())]->Fill(sh_start[3]);
       plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
