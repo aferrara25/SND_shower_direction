@@ -23,47 +23,32 @@ e.g. source multicoreGiulia 100639 15 true to analyse 15 files of run 100639 of 
 
 
 
+The provided code appears to be a C++ script for analyzing data from a high-energy physics experiment. Here's a breakdown of the main components and functionalities:
+
+### Configuration Setup (`setCfg`):
+- This function sets up the configuration parameters based on whether the data is from a test beam (`isTB`) or from physics runs.
+- It initializes various parameters such as the number of stations, time cuts, input/output file paths, etc., depending on the type of run.
+
+### Plot Definition (`definePlots`):
+- This function initializes histograms for storing analysis results. It creates histograms for various quantities such as timestamps, hit distributions, shower characteristics, etc.
+- Histograms are created for both per-event and per-station analysis.
+- Different histograms are created for different analysis tags such as "NoCut", "Cut", and "GuilCut", which likely correspond to different data selection criteria.
+
+### Data Processing Functions (`fillSciFi`, `fillUS`, `checkShower_with_clusters`, `checkShower_with_density`, `checkShower_with_F`, `hitCut`, `timeCut`, `timeCutGuil`, `fillPlots`):
+- These functions process the data obtained from the input files.
+- `fillSciFi` and `fillUS` parse the hits from the SciFi and MuFilter detectors, respectively, and organize them into appropriate data structures (`SciFiPlaneView` and `USPlaneView`).
+- `checkShower_with_clusters`, `checkShower_with_density`, and `checkShower_with_F` identify the start of showers based on different criteria.
+- `hitCut` applies hit cuts to the data.
+- `timeCut` and `timeCutGuil` perform time cuts on the data.
+- `fillPlots` fills the histograms defined earlier with the processed data, incorporating shower tagging information.
+
+### Analysis Execution (`runAnalysis`):
+- This function orchestrates the entire analysis process.
+- It reads input files, sets up output files, initializes histograms, reads hits data, applies data processing steps, and fills histograms with processed data.
+- It also records the start time of the analysis.
+- Depending on the parameters passed, it can perform either a single-threaded or multi-threaded analysis.
+
+### Summary:
+The provided code is a comprehensive script for analyzing data from high-energy physics experiments. It encompasses data loading, processing, analysis, and result visualization. The script is structured and modular, making it easy to extend or modify for different analysis requirements.
 
 
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.cern.ch/gpsndlhc/sndlhc_bo_tbanalysis.git
-git branch -M master
-git push -uf origin master
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.cern.ch/gpsndlhc/sndlhc_bo_tbanalysis/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
