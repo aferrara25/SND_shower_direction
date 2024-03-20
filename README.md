@@ -22,8 +22,7 @@ source multicoreGiulia.sh run_number number_files_to_read isTBdata
 e.g. source multicoreGiulia 100639 15 true to analyse 15 files of run 100639 of TB data
 
 
-
-The provided code appears to be a C++ script for analyzing data from a high-energy physics experiment. Here's a breakdown of the main components and functionalities:
+## Brief Documentation
 
 ### Configuration Setup (`setCfg`):
 - This function sets up the configuration parameters based on whether the data is from a test beam (`isTB`) or from physics runs.
@@ -49,6 +48,6 @@ The provided code appears to be a C++ script for analyzing data from a high-ener
 - Depending on the parameters passed, it can perform either a single-threaded or multi-threaded analysis.
 
 ### Summary:
-The provided code is a comprehensive script for analyzing data from high-energy physics experiments. It encompasses data loading, processing, analysis, and result visualization. The script is structured and modular, making it easy to extend or modify for different analysis requirements.
+The provided code is a comprehensive script for analyzing SND@LHC data. It encompasses data loading, processing, analysis, and result visualization. The script is structured and modular, making it easy to extend or modify for different analysis requirements.
 
 
