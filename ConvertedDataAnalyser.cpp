@@ -399,7 +399,12 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   //TFile *treeFile; = new TFile("tree.root", "RECREATE");
   if (isMulticore){
     fEventTree->Add(Form("%srun_%06d/sndsw_raw-%04d.root", configuration.INFILENAME.c_str(), runNumber, nFiles));
-    outputFile = new TFile(Form("%sRun_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
+    if (target != -1){
+      outputFile = new TFile(Form("%sRun_%d_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles, target), "RECREATE");
+    }
+    else {
+      outputFile = new TFile(Form("%sRun_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
+    }
     //treeFile = new TFile(Form("%s_tree_Run_%d_%d.root", configuration.OUTFILENAME.c_str(), runNumber, nFiles), "RECREATE");
   }
   else {
