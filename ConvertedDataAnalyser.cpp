@@ -377,7 +377,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
-  //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
+  std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
@@ -387,6 +387,9 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   auto now = std::chrono::system_clock::to_time_t(start);
   if (target == -1){
     std::cout << "Start: " << std::ctime(&now)  << "\n" <<std::flush;
+  }
+  else{
+    std::cout << "Run: " << runNumber << "\t File: "  << nFiles << "\t Evt: " << target << "\n" <<std::flush;
   }
 
   // ##################### Set right parameters for data type (TB/TI18) #####################
