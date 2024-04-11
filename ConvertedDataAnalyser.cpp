@@ -209,35 +209,17 @@ int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes) {
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
-// Define a function to calculate the Euclidean distance between two points
-float distance(const SciFiPlaneView& hit1, const SciFiPlaneView& hit2) {
-    float dx = hit1.getPosition().x - hit2.getPosition().x;
-    float dy = hit1.getPosition().y - hit2.getPosition().y;
-    return std::sqrt(dx * dx + dy * dy);
+bool hitCut (std::vector<SciFiPlaneView> &detector){
+  for (auto &plane : detector){
+    if (plane.getStation() == 1 && plane.sizes().x == 1 && plane.sizes().y == 1 ) return true;
+    /*else if (plane.getStation() > 1){
+      int thr = plane.getConfig().SCIFI_DIMCLUSTER;
+      if (plane.sizes().x > thr && plane.sizes().y > thr) return true;
+    }*/
+  }
+  return false;
 }
 
-bool hitCut(std::vector<SciFiPlaneView>& detector) {
-    int hitsInRegion = 0; // Counter for hits in the desired region
-    for (size_t i = 0; i < detector.size(); ++i) {
-        if (detector[i].getStation() == 1 && detector[i].sizes().x == 1 && detector[i].sizes().y == 1) {
-            hitsInRegion++; 
-            if (hitsInRegion >= 5) // If 5 hits are found in the region, return true
-                return true;
-            
-            // Check spatial condition for consecutive hits
-            if (i > 0) {
-                float dist = distance(detector[i], detector[i - 1]);
-                // If hits are not close enough, reset counter
-                if (dist > MAX_DISTANCE) {
-                    hitsInRegion = 0;
-                }
-            }
-        } else {
-            hitsInRegion = 0; // Reset counter if conditions are not met
-        }
-    }
-    return hitsInRegion <= 5; // Return true if maximum 5 hits are found in the region, false otherwise
-}
 
 void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
   double referenceTime{-1};
