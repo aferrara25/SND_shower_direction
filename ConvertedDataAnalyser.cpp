@@ -209,15 +209,34 @@ int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes) {
 // timecut -> vector scifiplaneview time cut 
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
-bool hitCut (std::vector<SciFiPlaneView> &detector){
-  for (auto &plane : detector){
-    if (plane.getStation() == 1 && plane.sizes().x == 1 && plane.sizes().y == 1 ) return true;
-    /*else if (plane.getStation() > 1){
-      int thr = plane.getConfig().SCIFI_DIMCLUSTER;
-      if (plane.sizes().x > thr && plane.sizes().y > thr) return true;
-    }*/
-  }
-  return false;
+// Define a function to calculate the Euclidean distance between two points
+float distance(const SciFiPlaneView& hit1, const SciFiPlaneView& hit2) {
+    float dx = hit1.getPosition().x - hit2.getPosition().x;
+    float dy = hit1.getPosition().y - hit2.getPosition().y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+bool hitCut(std::vector<SciFiPlaneView>& detector) {
+    int hitsInRegion = 0; // Counter for hits in the desired region
+    for (size_t i = 0; i < detector.size(); ++i) {
+        if (detector[i].getStation() == 1 && detector[i].sizes().x == 1 && detector[i].sizes().y == 1) {
+            hitsInRegion++; 
+            if (hitsInRegion >= 5) // If 5 hits are found in the region, return true
+                return true;
+            
+            // Check spatial condition for consecutive hits
+            if (i > 0) {
+                float dist = distance(detector[i], detector[i - 1]);
+                // If hits are not close enough, reset counter
+                if (dist > MAX_DISTANCE) {
+                    hitsInRegion = 0;
+                }
+            }
+        } else {
+            hitsInRegion = 0; // Reset counter if conditions are not met
+        }
+    }
+    return hitsInRegion <= 5; // Return true if maximum 5 hits are found in the region, false otherwise
 }
 
 void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
@@ -377,7 +396,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
-  std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
+  //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
