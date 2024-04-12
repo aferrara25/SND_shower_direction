@@ -210,8 +210,16 @@ int checkShower_with_F(std::vector<SciFiPlaneView> scifi_planes) {
 // nel file skimmato ho comunque sempre solo un evento in stazione 1-> leggo tempo di quello (parametro è vector scifiplaneview con tutti hit) e butto via i fuori tempo
 
 bool hitCut (std::vector<SciFiPlaneView> &detector){
+  int hitsInRegion = 0;
   for (auto &plane : detector){
-    if (plane.getStation() == 1 && plane.sizes().x == 1 && plane.sizes().y == 1 ) return true;
+    if (plane.getStation() == 1 && plane.sizes().x == 1 && plane.sizes().y == 1 ) {
+      hitsInRegion++;
+      if (hitsInRegion >= 5)
+        return true;
+    }
+    else {
+      hitsInRegion = 0;
+    }
     /*else if (plane.getStation() > 1){
       int thr = plane.getConfig().SCIFI_DIMCLUSTER;
       if (plane.sizes().x > thr && plane.sizes().y > thr) return true;
