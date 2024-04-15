@@ -63,6 +63,9 @@ public:
   void findCentroid(int windowSize);
   void timeCut(double minTime, double maxTime);
 
+
+  double evaluateNeighboringHits(int windowSize, int min_hits);
+
 private:
   xy_pair<std::vector<double>> qdc;
   xy_pair<std::vector<double>> hitTimestamps;

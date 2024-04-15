@@ -255,6 +255,38 @@ void SciFiPlaneView::timeCut (double minTime, double maxTime) {
     }
 }
 
+
+double SciFiPlaneView::evaluateNeighboringHits (int windowSize, int min_hits) const {
+    int count = 0;
+    double sum = 0.0;
+
+    // Scorrere tutti i canali
+    for (int i = 0; i < qdc.x.size(); ++i) {
+        // Controlla se il canale ha un valore diverso da DEFAULT
+        if (qdc.x[i] != DEFAULT) {
+            // Controlla se ci sono abbastanza hit vicini nel windowSize
+            int nearbyHits = 0;
+            for (int j = std::max(0, i - windowSize / 2); j < std::min(static_cast<int>(qdc.x.size()), i + windowSize / 2); ++j) {
+                if (qdc.x[j] != DEFAULT) {
+                    nearbyHits++;
+                }
+            }
+            if (nearbyHits >= min_hits) {
+                count++;
+                sum += i; // Aggiungi la posizione del canale al totale
+            }
+        }
+    }
+
+    // Calcola la posizione media se ci sono abbastanza hit
+    if (count >= minHits) {
+        return sum / count;
+    } else {
+        return DEFAULT; // Ritorna DEFAULT se non ci sono abbastanza hit
+    }
+}
+
+
 const int SciFiPlaneView::getStation() const {
     return station;
 }
