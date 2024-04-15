@@ -245,6 +245,7 @@ double evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int win
         return DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
         std::cout <<"Default" <<std::endl;
     }
+  std::cout <<"La posizione è: " <<sumPositions/totalHits <<std::endl;
 }
 
 /*double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
