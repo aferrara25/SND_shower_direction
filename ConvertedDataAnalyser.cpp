@@ -220,7 +220,32 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
   return false;
 }
 
-double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
+
+double evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
+    int totalHits = 0;
+    double sumPositions = 0.0;
+
+    // Itera su tutti gli oggetti SciFiPlaneView
+    for (const auto& planeView : scifi) {
+        // Calcola la media delle posizioni dei canali con abbastanza hit vicini in questo oggetto
+        double planeViewPosition = planeView.evaluateNeighboringHits(window, min_hits);
+
+        // Controlla se il risultato non è DEFAULT (cioè se ci sono abbastanza hit)
+        if (planeViewPosition != DEFAULT) {
+            totalHits++;
+            sumPositions += planeViewPosition;
+        }
+    }
+
+    // Calcola la media delle posizioni dei canali con abbastanza hit tra tutti gli oggetti SciFiPlaneView
+    if (totalHits > 0) {
+        return sumPositions / totalHits;
+    } else {
+        return DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
+    }
+}
+
+/*double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
   double position = 0.0;
   if (position != DEFAULT) {
     std::cout <<"Posizione media dei vicini: " <<position <<std::endl;
@@ -229,7 +254,7 @@ double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<
   }
 std::cout<<"SciFi:\t"<<position <<std::endl;
 return 0;
-}
+}*/
 
 
 void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
