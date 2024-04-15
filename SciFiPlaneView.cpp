@@ -256,7 +256,7 @@ void SciFiPlaneView::timeCut (double minTime, double maxTime) {
 }
 
 
-void SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
+double SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
     int count = 0;
     double sum = 0.0;
 
