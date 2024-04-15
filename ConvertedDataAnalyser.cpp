@@ -227,7 +227,7 @@ double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<
   } else {
     std::cout <<"Non ci sono abbastanza hit vicini" <<std::endl;
   }
-std::cout<<"SciFi:\t"<<position <<std::endl
+std::cout<<"SciFi:\t"<<position <<std::endl;
 return 0;
 }
 
