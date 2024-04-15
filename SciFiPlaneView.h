@@ -64,7 +64,7 @@ public:
   void timeCut(double minTime, double maxTime);
 
 
-  void evaluateNeighboringHits(int window, int min_hits);
+  double evaluateNeighboringHits(int window, int min_hits);
 
 private:
   xy_pair<std::vector<double>> qdc;
