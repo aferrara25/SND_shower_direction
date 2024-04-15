@@ -279,7 +279,7 @@ double SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const 
     }
 
     // Calcola la posizione media se ci sono abbastanza hit
-    if (count >= min_Hits) {
+    if (count >= min_hits) {
         return sum / count;
     } else {
         return DEFAULT; // Ritorna DEFAULT se non ci sono abbastanza hit
