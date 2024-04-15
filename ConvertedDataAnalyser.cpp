@@ -225,7 +225,7 @@ double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<
   return position;  
 }
 
-double position = evaluateNeighboringHits()
+double position = evaluateNeighboringHits();
 if (position != DEFAULT) {
   std::cout <<"Posizione media dei vicini: " <<position <<std::endl;
 } else {
