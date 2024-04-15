@@ -221,6 +221,7 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
 }
 
 double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
+  double position = 0.0;
   return position;  
 }
 
@@ -230,8 +231,6 @@ if (position != DEFAULT) {
 } else {
   std::cout <<"Non ci sono abbastanza hit vicini" <<std::endl;
 }
-return 0;
-
 
  
 
