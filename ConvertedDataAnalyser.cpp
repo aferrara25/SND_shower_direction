@@ -220,13 +220,17 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
   return false;
 }
 
-double position = evaluateNeighboringHits (std::vector<SciFiPlaneView>, std::vector<SciFiPlaneView>);
+double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
+  return position;  
+}
+
+double position = evaluateNeighboringHits()
 if (position != DEFAULT) {
   std::cout <<"Posizione media dei vicini: " <<position <<std::endl;
-  } else {
+} else {
   std::cout <<"Non ci sono abbastanza hit vicini" <<std::endl;
 }
-//return 0;
+return 0;
 
 
  
