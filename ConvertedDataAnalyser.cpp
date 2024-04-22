@@ -221,7 +221,7 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
 }
 
 
-void evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
+double evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
     int totalHits = 0;
     double sumPositions = 0.0;
 
@@ -239,10 +239,10 @@ void evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int windo
 
     // Calcola la media delle posizioni dei canali con abbastanza hit tra tutti gli oggetti SciFiPlaneView
     if (totalHits > 0) {
-        double mpos = sumPositions / totalHits;
-        std::cout <<"Position: " <<mpos <<std::endl; //sumPositions/totalHits <<std::endl;
+        return sumPositions / totalHits;
+        std::cout <<"Position: " <<sumPositions/totalHits <<std::endl;
     } else {
-        DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
+        return DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
         std::cout <<"Default" <<std::endl;
     }
   std::cout <<"La posizione è: " <<sumPositions/totalHits <<std::endl;

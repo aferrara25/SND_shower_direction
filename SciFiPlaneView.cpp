@@ -256,7 +256,7 @@ void SciFiPlaneView::timeCut (double minTime, double maxTime) {
 }
 
 
-void SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
+double SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
     int count = 0;
     double sum = 0.0;
 
@@ -280,9 +280,9 @@ void SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
 
     // Calcola la posizione media se ci sono abbastanza hit
     if (count >= min_hits) {
-        double mpos = sum / count;
+        return double mpos = sum / count;
     } else {
-        DEFAULT; // Ritorna DEFAULT se non ci sono abbastanza hit
+        return DEFAULT; // Ritorna DEFAULT se non ci sono abbastanza hit
     }
 }
 
