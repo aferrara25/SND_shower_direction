@@ -239,10 +239,10 @@ void evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int windo
 
     // Calcola la media delle posizioni dei canali con abbastanza hit tra tutti gli oggetti SciFiPlaneView
     if (totalHits > 0) {
-        return sumPositions / totalHits;
-        std::cout <<"Position: " <<sumPositions/totalHits <<std::endl;
+        double mpos = sumPositions / totalHits;
+        std::cout <<"Position: " <<mpos <<std::endl; //sumPositions/totalHits <<std::endl;
     } else {
-        return DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
+        DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
         std::cout <<"Default" <<std::endl;
     }
   std::cout <<"La posizione è: " <<sumPositions/totalHits <<std::endl;
