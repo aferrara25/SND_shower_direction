@@ -221,7 +221,7 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
 }
 
 
-double evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
+void evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
     int totalHits = 0;
     double sumPositions = 0.0;
 
