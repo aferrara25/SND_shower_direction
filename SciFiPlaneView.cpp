@@ -256,34 +256,75 @@ void SciFiPlaneView::timeCut (double minTime, double maxTime) {
 }
 
 
-double SciFiPlaneView::evaluateNeighboringHits (int window, int min_hits) const {
-    int count = 0;
-    double sum = 0.0;
+bool SciFiPlaneView::evaluateNeighboringHits(int clustermaxsize, int max_miss) const {
+    auto slide = [&](const std::vector<double> &qdcarr, int n) {
+        if (n > clustermaxsize || n == 0) {
+            return false;
+        }
 
-    // Scorrere tutti i canali
-    for (int i = 0; i < qdc.x.size(); ++i) {
-        // Controlla se il canale ha un valore diverso da DEFAULT
-        if (qdc.x[i] != DEFAULT) {
-            // Controlla se ci sono abbastanza hit vicini nel window
-            int nearbyHits = 0;
-            for (int j = std::max(0, i - window / 2); j < std::min(static_cast<int>(qdc.x.size()), i + window / 2); ++j) {
-                if (qdc.x[j] != DEFAULT) {
-                    nearbyHits++;
+        int hits{0};
+        int miss{0};
+
+        for (int i{0}; i < qdcarr.size(); ++i) {
+            if (qdcarr[i] == DEFAULT) {
+                if (hits > 0) {
+                    miss++;
+                    if (miss > max_miss) {
+                        return false;
+                    }
                 }
             }
-            if (nearbyHits >= min_hits) {
-                count++;
-                sum += i; // Aggiungi la posizione del canale al totale
+            else {
+                hits++;
+                if (hits + miss > clustermaxsize) {
+                    return false;
+                }
+                if (n == hits) {
+                    return true;
+                }
             }
         }
+        return true;
+    };
+
+    int sizeX = sizes().x;
+    int sizeY = sizes().y;
+
+    return slide(qdc.x, sizeX) && slide(qdc.y, sizeY);
+}
+
+
+
+std::vector<int> SciFiPlaneView::calculateValidPositionsx(int clustermaxsize, int max_miss) const {
+    std::vector<int> posx;
+    
+    int i=0;
+    for (int value : qdc.x) {
+        if (SciFiPlaneView::evaluateNeighboringHits(clustermaxsize, max_miss) == true) {
+            if (value != DEFAULT) { 
+                posx.push_back(i);
+            }
+        }
+        i++;
     }
 
-    // Calcola la posizione media se ci sono abbastanza hit
-    if (count >= min_hits) {
-        return sum / count;
-    } else {
-        return DEFAULT; // Ritorna DEFAULT se non ci sono abbastanza hit
+    return posx;
+}
+
+std::vector<int> SciFiPlaneView::calculateValidPositionsy(int clustermaxsize, int max_miss) const {
+    std::vector<int> posy;
+    
+    int i=0;
+    for (int value : qdc.y) {
+        if (SciFiPlaneView::evaluateNeighboringHits(clustermaxsize, max_miss) == true) {
+            if (value != DEFAULT) { 
+                posy.push_back(i);
+            }
+        }
+        i++;
     }
+
+    return posy;
 }
 
 

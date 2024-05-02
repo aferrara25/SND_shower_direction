@@ -220,44 +220,43 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
   return false;
 }
 
+void evaluateAveragePosition(const std::vector<SciFiPlaneView>& scifi, int clustermaxsize, int max_miss) {
+  for (const auto& view : scifi) {
+    if (view.evaluateNeighboringHits(clustermaxsize, max_miss) == true) {
+      std::cout << "è vera " << std::endl;
+      //std::vector<int> valid_positionsx = view.calculateValidPositionsx(clustermaxsize, max_miss);
+      //std::vector<int> valid_positionsy = view.calculateValidPositionsy(clustermaxsize, max_miss);
+      // if (*std::max_element(valid_positions.begin(),valid_positions.end())-*std::min_element(valid_positions.begin(),valid_positions.end())>=valid_positions.size()) {
+      //  std::cout << "Posizioni valide: ";
+      // for (std::size_t i = 0; i < valid_positions.size(); i++) {
+      //   std::cout << valid_positions[i];
+      //   if (i != valid_positions.size() - 1) {
+      //     std::cout << ", ";
+      //   }       
 
-double evaluateNeighboringHits(const std::vector<SciFiPlaneView> &scifi, int window, int min_hits) {
-    int totalHits = 0;
-    double sumPositions = 0.0;
-
-    // Itera su tutti gli oggetti SciFiPlaneView
-    for (const auto& planeView : scifi) {
-        // Calcola la media delle posizioni dei canali con abbastanza hit vicini in questo oggetto
-        double planeViewPosition = planeView.evaluateNeighboringHits(window, min_hits);
-
-        // Controlla se il risultato non è DEFAULT (cioè se ci sono abbastanza hit)
-        if (planeViewPosition != DEFAULT) {
-            totalHits++;
-            sumPositions += planeViewPosition;
-        }
+  //}
+    std::vector<int> valid_positionsx = view.calculateValidPositionsx(clustermaxsize, max_miss);
+    std::cout << "Posizioni valide in x: ";
+    for (std::size_t i = 0; i < valid_positionsx.size(); i++) {
+      std::cout << valid_positionsx[i];
+      if (i != valid_positionsx.size() - 1) {
+        std::cout << ", ";
+      }
     }
+    std::cout << std::endl;
 
-    // Calcola la media delle posizioni dei canali con abbastanza hit tra tutti gli oggetti SciFiPlaneView
-    if (totalHits > 0) {
-        return sumPositions / totalHits;
-        std::cout <<"Position: " <<sumPositions/totalHits <<std::endl;
-    } else {
-        return DEFAULT; // Ritorna DEFAULT se nessun oggetto ha abbastanza hit
-        std::cout <<"Default" <<std::endl;
+    std::vector<int> valid_positionsy = view.calculateValidPositionsy(clustermaxsize, max_miss);
+    std::cout << "Posizioni valide in y: ";
+    for (std::size_t i = 0; i < valid_positionsy.size(); i++) {
+      std::cout << valid_positionsy[i];
+      if (i != valid_positionsy.size() - 1) {
+        std::cout << ", ";
+      }
     }
-  std::cout <<"La posizione è: " <<sumPositions/totalHits <<std::endl;
-}
-
-/*double evaluateNeighboringHits (std::vector<SciFiPlaneView> &Scifi, std::vector<SciFiPlaneView>) {
-  double position = 0.0;
-  if (position != DEFAULT) {
-    std::cout <<"Posizione media dei vicini: " <<position <<std::endl;
-  } else {
-    std::cout <<"Non ci sono abbastanza hit vicini" <<std::endl;
+  std::cout << std::endl;
   }
-std::cout<<"SciFi:\t"<<position <<std::endl;
-return 0;
-}*/
+  }
+}
 
 
 void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
@@ -417,7 +416,7 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t.c_str(), shStart)]->Fill(Large_USQDCSum, partialScifiQDCSum); // only large?
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
-  std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
+  //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
@@ -514,7 +513,7 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   }
   //for ( int m = 0; m < iMax; m++ ){ 
   for ( int m = first; m < last; m++ ){ 
-    //if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
+    if (m % 100 == 0) std::cout << "Processing event: " << m << '\r' << std::flush;
     //if (m >1000) break;
     fEventTree->GetEntry(m);
 
@@ -565,7 +564,9 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
       fillPlots(scifi_planes, us_planes, plots, tags[1], sh_start[0]);
 
     }
-
+    else {
+      evaluateAveragePosition(scifi_planes, 4, 1);
+    }
     if (is_apart) {
       double refT = timeCutGuil(scifi_planes_guil, us_planes_guil);
       sh_start[3] = checkShower_with_clusters(scifi_planes_guil);

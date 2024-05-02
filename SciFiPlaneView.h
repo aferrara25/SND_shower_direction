@@ -64,7 +64,12 @@ public:
   void timeCut(double minTime, double maxTime);
 
 
-  double evaluateNeighboringHits(int window, int min_hits) const;
+  bool evaluateNeighboringHits(int clustermaxsize, int max_miss) const; //minimo 3 hit su 4 
+  std::vector<int> calculateValidPositionsx(int clustermaxsize, int max_miss) const;
+  std::vector<int> calculateValidPositionsy(int clustermaxsize, int max_miss) const;
+
+
+
 
 private:
   xy_pair<std::vector<double>> qdc;
