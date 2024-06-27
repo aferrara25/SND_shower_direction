@@ -6,6 +6,7 @@
 #include "SciFiPlaneView.h"
 #include "USPlaneView.h"
 
+
 cfg setCfg( bool istb, int runN ) {
   cfg config;
   if (istb) {
@@ -53,6 +54,8 @@ cfg setCfg( bool istb, int runN ) {
   return config;
 }
 
+
+R__LOAD_LIBRARY(/cvmfs/sndlhc.cern.ch/SNDLHC-2023/Aug30/sw/slc9_x86-64/ROOT/v6-28-04-local1/lib/libROOTTPython.so)
 
 
 void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::map<std::string, double> &m_counters, std::vector<std::string> &tags, std::vector<std::string> &shower_tags) {
@@ -223,7 +226,8 @@ bool hitCut (std::vector<SciFiPlaneView> &detector){
 void evaluateAveragePosition(const std::vector<SciFiPlaneView>& scifi, int clustermaxsize, int max_miss) {
   for (const auto& view : scifi) {
     if (view.evaluateNeighboringHits(clustermaxsize, max_miss) == true) {
-      std::cout << "è vera " << std::endl;
+      //std::cout << "The condition is satisfied " << std::endl;
+
       //std::vector<int> valid_positionsx = view.calculateValidPositionsx(clustermaxsize, max_miss);
       //std::vector<int> valid_positionsy = view.calculateValidPositionsy(clustermaxsize, max_miss);
       // if (*std::max_element(valid_positions.begin(),valid_positions.end())-*std::min_element(valid_positions.begin(),valid_positions.end())>=valid_positions.size()) {
@@ -236,7 +240,7 @@ void evaluateAveragePosition(const std::vector<SciFiPlaneView>& scifi, int clust
 
   //}
     std::vector<int> valid_positionsx = view.calculateValidPositionsx(clustermaxsize, max_miss);
-    std::cout << "Posizioni valide in x: ";
+    /*std::cout << "Positions in x: ";
     for (std::size_t i = 0; i < valid_positionsx.size(); i++) {
       std::cout << valid_positionsx[i];
       if (i != valid_positionsx.size() - 1) {
@@ -244,20 +248,20 @@ void evaluateAveragePosition(const std::vector<SciFiPlaneView>& scifi, int clust
       }
     }
     std::cout << std::endl;
+    */
 
     std::vector<int> valid_positionsy = view.calculateValidPositionsy(clustermaxsize, max_miss);
-    std::cout << "Posizioni valide in y: ";
+    /*std::cout << "Positions in in y: ";
     for (std::size_t i = 0; i < valid_positionsy.size(); i++) {
       std::cout << valid_positionsy[i];
       if (i != valid_positionsy.size() - 1) {
         std::cout << ", ";
       }
     }
-  std::cout << std::endl;
+    std::cout << std::endl; */
   }
   }
 }
-
 
 void timeCut (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView> &US) {
   double referenceTime{-1};
@@ -419,6 +423,56 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
   //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
+void read_geo(Scifi*& ScifiDet, MuFilter*& MufiDet, const std::string& geoFilePath) {
+    TPython::Exec("import SndlhcGeo");
+    TPython::Exec(("SndlhcGeo.GeoInterface('" + geoFilePath + "')").c_str());
+
+    // Init detectors
+    ScifiDet = new Scifi("Scifi", kTRUE);
+    MufiDet = new MuFilter("MuFilter", kTRUE);
+
+    // Retrieve the detectors from ROOT's global list
+    ScifiDet = (Scifi*)gROOT->GetListOfGlobals()->FindObject("Scifi");
+    MufiDet = (MuFilter*)gROOT->GetListOfGlobals()->FindObject("MuFilter");
+
+    // Example file to initialize the detectors
+    TFile* f_in = new TFile("/eos/experiment/sndlhc/convertedData/physics/2024/run_242/run_008356/sndsw_raw-0001.root");
+    TTree* tree = (TTree*)f_in->Get("rawConv");
+
+    // Read the header
+    SNDLHCEventHeader* header = new SNDLHCEventHeader();
+    tree->SetBranchAddress("EventHeader.", &header);
+
+    // Get the first event and initialize the detectors with the header
+    tree->GetEvent(0);
+    ScifiDet->InitEvent(header);
+    MufiDet->InitEvent(header);
+
+    // Print some configuration parameters as checks
+    std::cout << ScifiDet->GetConfParF("Scifi/station2t") << std::endl;
+    std::cout << ScifiDet->GetConfParI("Scifi/nscifi") << std::endl;
+}
+
+void geom_pos(TChain* fEventTree, Scifi* ScifiDet) {
+    auto sf_hits = new TClonesArray("sndScifiHit");
+    fEventTree->SetBranchAddress("Digi_ScifiHits", &sf_hits);
+
+    for (int i = 0; i < fEventTree->GetEntries(); ++i) {
+        fEventTree->GetEntry(i);
+
+        // Process Scifi hits
+        for (int j = 0; j < sf_hits->GetEntries(); ++j) {
+            auto* aHit = dynamic_cast<sndScifiHit*>(sf_hits->At(j));
+            if (aHit) {
+                TVector3 A, B;
+                int detectorID = aHit->GetDetectorID();
+                ScifiDet->GetSiPMPosition(detectorID, A, B);
+                //std::cout << "Event " << i << ", Hit " << j << ": A(" << A.X() << ", " << A.Y() << ", " << A.Z() << "), B(" << B.X() << ", " << B.Y() << ", " << B.Z() << ")" << std::endl;
+            }
+        }
+    }
+}
+
 void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false, int target = -1) //(int runN, int partN)
 {
 
@@ -487,6 +541,16 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   else {
     fEventTree->SetBranchAddress("EventHeader.", &header);
   }
+
+  std::string rootFilePath = "/eos/experiment/sndlhc/convertedData/physics/2022/run_004705/sndsw_raw-0010.root";
+  std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/physics/2023/geofile_sndlhc_TI18_V3_2023.root";
+
+  Scifi* ScifiDet = nullptr;
+  MuFilter* MufiDet = nullptr;
+  
+  read_geo(ScifiDet, MufiDet, geoFilePath);
+
+  geom_pos(fEventTree, ScifiDet);
 
   // ###################### Create tree to store shower tagging info   ####################
 

@@ -374,3 +374,4 @@ const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getTotQDC() const{
 
     return clSize;
   }
+
