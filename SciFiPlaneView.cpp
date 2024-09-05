@@ -10,8 +10,8 @@ const int TOFPETperBOARD{8};
 const int TOFPETCHANNELS{64};
 
 
-SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s) : 
-            config(c), sf_hits(h), begin(b), end(e), station(s), clusterBegin({-1,-1}), clusterEnd({-1,-1}), centroid({-1,-1}) 
+SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, Scifi *det, int b, int e, int s) : 
+            config(c), sf_hits(h), ScifiDet(det), begin(b), end(e), station(s), clusterBegin({-1,-1}), clusterEnd({-1,-1}), centroid({-1,-1}) 
                 {
     if (b > e) {
         throw std::runtime_error{"Begin index > end index"};
@@ -20,10 +20,14 @@ SciFiPlaneView::SciFiPlaneView(cfg c, TClonesArray *h, int b, int e, int s) :
     qdc.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
     hitTimestamps.x.resize(config.SCIFI_NCHANNELS, DEFAULT);
     hitTimestamps.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    geom.x.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    geom.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    depth.x.resize(config.SCIFI_NCHANNELS, DEFAULT);
+    depth.y.resize(config.SCIFI_NCHANNELS, DEFAULT);
     fillQDC();
     fillTimestamps();
+    fillGeometry();
 }
-
 
 const SciFiPlaneView::xy_pair<int> SciFiPlaneView::sizes() const{
     xy_pair<int> counts{0, 0};
@@ -65,6 +69,33 @@ void SciFiPlaneView::fillTimestamps() {
         }
         else {
             hitTimestamps.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+        }
+    }
+}
+
+void SciFiPlaneView::fillGeometry() {
+    TVector3 A, B;
+    for (int i{begin}; i<end; ++i) {
+        auto hit = static_cast<sndScifiHit *>(sf_hits->At(i));
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+        
+        //hit->GetPosition(A,B);
+
+        int SiPMChan = hit->GetSiPMChan();
+        //int detectorID = hit->GetDetectorID();
+        ScifiDet->GetSiPMPosition(SiPMChan, A, B);
+        //ScifiDet->GetPosition(detectorID, A, B);     //error in Path of sndsw
+
+        //std::cout<<"X= " <<A.X() <<", Y= " <<A.Y() <<std::endl;
+        
+        if (hit->isVertical()) {
+            geom.y[position] = A.Y();
+            depth.y[position] = A.Z();
+            //std::cout<<"A.X= " <<A.X() <<" B.X= " <<B.X() <<" differenza " <<B.X()-A.X() <<std::endl;
+        }
+        else {
+            geom.x[position] = A.X();
+            depth.x[position] = A.Z();
         }
     }
 }
@@ -209,30 +240,106 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
     }
 }
 
-void SciFiPlaneView::findCentroid(int windowSize) {
-  // find shower centroid position in cm   
-  auto slide = [&] (std::vector<double> &qdcarr, double &centroidCoordinate) {
-    double maxSignal{0};    
-    for (int i{0}; i < (config.SCIFI_NCHANNELS - windowSize); ++i) {      
-      int off = std::count(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, DEFAULT);
-      if (off >= static_cast<int>(2*windowSize/3)) continue;
+// void SciFiPlaneView::findCentroid(int windowSize) {
+//   // find shower centroid position in cm   
+//   auto slide = [&] (std::vector<double> &qdcarr, double &centroidCoordinate) {
+//     double maxSignal{0};    
+//     for (int i{0}; i < (config.SCIFI_NCHANNELS - windowSize); ++i) {      
+//       int off = std::count(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, DEFAULT);
+//       if (off >= static_cast<int>(2*windowSize/3)) continue;
 
-      double signalSum = std::accumulate(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, 0, 
-        [](int current_sum, int value) {
-            return (value > DEFAULT) ? (current_sum + value) : current_sum;
-        });
+//       double signalSum = std::accumulate(qdcarr.begin() + i, qdcarr.begin() + i + windowSize, 0, 
+//         [](int current_sum, int value) {
+//             return (value > DEFAULT) ? (current_sum + value) : current_sum;
+//         });
 
-      double ratio =  signalSum/(windowSize-off);
-      if ( maxSignal < ratio ) {
-        maxSignal = ratio;
-        centroidCoordinate = (i+(windowSize*.5)) *.025;    // conversion in cm
-      }
-    }
-  };
-  slide(qdc.x, centroid.x);
-  slide(qdc.y, centroid.y);
+//       double ratio =  signalSum/(windowSize-off);
+//       if ( maxSignal < ratio ) {
+//         maxSignal = ratio;
+//         centroidCoordinate = (i+(windowSize*.5)) *.025;    // conversion in cm
+//       }
+//     }
+//   };
+//   slide(qdc.x, centroid.x);
+//   slide(qdc.y, centroid.y);
+// }
+
+void SciFiPlaneView::findCentroid() {
+    auto calculateCentroid = [](const std::vector<double>& signals, const std::vector<double>& positions, const std::vector<double>& depths, double& centroid, double& centroid_depth) {
+        double sumSignal = 0.0;
+        double sumWeighted = 0.0;
+        double sumZ = 0.0;
+
+        for (size_t position = 0; position < signals.size(); ++position) {
+            double signal = signals[position];
+
+            if (signal >= 0) {
+                double pos = positions[position];
+                double d = depths[position];
+                // std::cout <<"pos: " <<pos <<" signal: " <<signal <<std::endl;
+                sumSignal += signal;
+                sumWeighted += signal * pos;
+                sumZ += signal * d;
+            }
+        }
+        if (signals.size()<1) {
+            centroid = DEFAULT;
+            centroid_depth = DEFAULT;
+        }
+        else {
+            centroid = sumWeighted / sumSignal;
+            centroid_depth = sumZ / sumSignal;
+        }
+    };
+
+    calculateCentroid(qdc.x, geom.x, depth.x, centroid.x, centroid_depth.x);
+    calculateCentroid(qdc.y, geom.y, depth.y, centroid.y, centroid_depth.y);
+
+    //std::cout<<centroid.x <<", " <<centroid.y <<std::endl;
+    //std::cout<<centroid_depth.x <<", " <<centroid_depth.y <<std::endl;
 }
 
+void SciFiPlaneView::findMuon() {
+    auto positionMuon = [](const std::vector<double>& positions, const std::vector<double>& depths, double& muonpos, double& muondepth) {
+        double sumPositions = 0.0;
+        double sumDepths = 0.0;
+        size_t count = 0;
+
+        for (size_t i = 0; i < positions.size(); ++i) {
+            if (positions[i] > DEFAULT) {
+                sumPositions += positions[i];
+                sumDepths += depths[i];
+                ++count;
+            }
+        }
+
+        if (count == 0) {
+            muonpos = DEFAULT;
+            muondepth = DEFAULT;
+        } else {
+            muonpos = sumPositions / count;
+            muondepth = sumDepths / count;
+        }
+    };
+
+    positionMuon(geom.x, depth.x, muonpos.x, muondepth.x);
+    positionMuon(geom.y, depth.y, muonpos.y, muondepth.y);
+
+    // std::cout << muonpos.x << ", " << muonpos.y << std::endl;
+    // std::cout << muondepth.x << ", " << muondepth.y << std::endl;
+}
+
+void SciFiPlaneView::findPosition() {
+    auto positions = getGeometry();
+    
+    std::cout << "Positions x: ";
+    for (const auto& p : positions.x) std::cout << p << " ";
+    std::cout << std::endl;
+
+    std::cout << "Positions y: ";
+    for (const auto& p : positions.y) std::cout << p << " ";
+    std::cout << std::endl;
+}
 
 void SciFiPlaneView::resetHit( bool isVertical, int index){
     if (isVertical) {
@@ -254,7 +361,6 @@ void SciFiPlaneView::timeCut (double minTime, double maxTime) {
         if (hitTimestamps.y[i] < minTime || hitTimestamps.y[i] > maxTime) resetHit(true, i);  
     }
 }
-
 
 bool SciFiPlaneView::evaluateNeighboringHits(int clustermaxsize, int max_miss) const {
     auto slide = [&](const std::vector<double> &qdcarr, int n) {
@@ -293,8 +399,6 @@ bool SciFiPlaneView::evaluateNeighboringHits(int clustermaxsize, int max_miss) c
     return slide(qdc.x, sizeX) && slide(qdc.y, sizeY);
 }
 
-
-
 std::vector<int> SciFiPlaneView::calculateValidPositionsx(int clustermaxsize, int max_miss) const {
     std::vector<int> posx;
     
@@ -327,7 +431,6 @@ std::vector<int> SciFiPlaneView::calculateValidPositionsy(int clustermaxsize, in
     return posy;
 }
 
-
 const int SciFiPlaneView::getStation() const {
     return station;
 }
@@ -347,6 +450,25 @@ const int SciFiPlaneView::getEnd() const {
 const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroid() const{
     xy_pair<double> c{centroid.x, centroid.y};
     return c;
+}
+
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroidDepth() const{
+    xy_pair<double> c{centroid_depth.x, centroid_depth.y};
+    return c;
+}
+
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuon() const{
+    xy_pair<double> c{muonpos.x, muonpos.y};
+    return c;
+}
+
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuonDepth() const{
+    xy_pair<double> c{muondepth.x, muondepth.y};
+    return c;
+}
+
+const SciFiPlaneView::xy_pair<std::vector<double>> SciFiPlaneView::getGeometry() const {
+    return geom;
 }
 
 const SciFiPlaneView::xy_pair<std::vector<double>> SciFiPlaneView::getTime() const{

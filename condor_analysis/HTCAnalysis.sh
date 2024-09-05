@@ -1,10 +1,10 @@
 #!/bin/bash
 
-SNDLHC_soft=/afs/cern.ch/user/f/fmei/private/sndas
+SNDLHC_soft=/afs/cern.ch/user/a/aferrara/
 export ALIBUILD_WORK_DIR=$SNDLHC_soft/sw #for alienv
 source /cvmfs/sndlhc.cern.ch/SNDLHC-2023/Aug30/setUp.sh
 eval `alienv load --no-refresh sndsw/latest`
-cd /afs/cern.ch/work/f/fmei/private/sndlhc_bo_tbanalysis
+cd /afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/
 
 runN=$1 # read from the input_args.txt
 nFiles=$2 # read from the input_args.txt
