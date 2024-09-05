@@ -100,8 +100,8 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
 
 
-      plots[Form("%s_Hits_Position_st%dX", t, st)] = new TH1D (Form("%s_Hits_Position_%dX", t, st), Form("%s_Hits_Position_%dX; x (cm); entries", t, st), 80, -44.7, -44.5);
-      plots[Form("%s_Hits_Position_st%dY", t, st)] = new TH1D (Form("%s_Hits_Position_%dY", t, st), Form("%s_Hits_Position_%dY; y (cm); entries", t, st), 80, 37.8, 37.9);
+      plots[Form("%s_Hits_Position_st%dX", t, st)] = new TH1D (Form("%s_Hits_Position_%dX", t, st), Form("%s_Hits_Position_%dX; x (cm); entries", t, st), 1000, -100, 100);
+      plots[Form("%s_Hits_Position_st%dY", t, st)] = new TH1D (Form("%s_Hits_Position_%dY", t, st), Form("%s_Hits_Position_%dY; y (cm); entries", t, st), 1000, -100, 100);
 
 
       //plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
@@ -689,10 +689,10 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   }
 
   //geom for TI18
-  // std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/physics/2023/geofile_sndlhc_TI18_V3_2023.root";
+  std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/physics/2023/geofile_sndlhc_TI18_V3_2023.root";
 
   //geom for Test Beam
-  std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/geofile_sndlhc_H8_2023_3walls.root";
+  // std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/geofile_sndlhc_H8_2023_3walls.root";
   
   Scifi* ScifiDet = nullptr;
   MuFilter* MufiDet = nullptr;

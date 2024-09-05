@@ -91,7 +91,7 @@ void SciFiPlaneView::fillGeometry() {
         if (hit->isVertical()) {
             geom.y[position] = A.Y();
             depth.y[position] = A.Z();
-            //std::cout<<"A.X= " <<A.X() <<" B.X= " <<B.X() <<" differenza " <<B.X()-A.X() <<std::endl;
+            std::cout<<"A.X= " <<A.X() <<" B.X= " <<B.X() <<" differenza " <<B.X()-A.X() <<std::endl;
         }
         else {
             geom.x[position] = A.X();
