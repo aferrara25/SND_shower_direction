@@ -19,10 +19,6 @@ cfg setCfg( bool istb, int runN ) {
     config.SCIFI_DENSITYWINDOW = 128;
     config.SCIFI_DENSITYHITS = 36;
     config.SCIFI_F = 0.17; 
-    // config.SCIFI_maxX = ;
-    // config.SCIFI_maxY = ;
-    // config.SCIFI_minX = ;
-    // config.SCIFI_minY = ;
 
     config.US_STATIONS = 5;
     config.US_TIMECUT = 3;
@@ -86,6 +82,14 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
     plots[Form("%s_Shower_development_X", t)] = new TH2D(Form("%s_Shower_development_X", t), Form("%s_Shower_development_X; x (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
     plots[Form("%s_Shower_development_Y", t)] = new TH2D(Form("%s_Shower_development_Y", t), Form("%s_Shower_development_Y; y (cm); SciFi plane;", t), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, configuration.SCIFI_STATIONS*5, 1, configuration.SCIFI_STATIONS + 1);
 
+    //plots for evaluating the efficiency of the method
+
+    plots[Form("%s_Intercept_Position_in_st1_X", t)] = new TH1D(Form("%s_Intercept_Position_in_st1_X", t), Form("%s_Intercept_Position_in_st1_X; x (cm); entries", t), 80, -55, -25);
+    plots[Form("%s_Intercept_Position_in_st1_Y", t)] = new TH1D(Form("%s_Intercept_Position_in_st1_Y", t), Form("%s_Intercept_Position_in_st1_Y; y (cm); entries", t), 80, 30, 60);
+
+    plots[Form("%s_HitPosition-Centroid_X", t)] = new TH1D(Form("%s_HitPosition-Centroid_X", t), Form("%s_HitPosition-Centroid_X; Hit-Centroid (cm); entries", t), 100, -15, 15);
+    plots[Form("%s_HitPosition-Centroid_Y", t)] = new TH1D(Form("%s_HitPosition-Centroid_Y", t), Form("%s_HitPosition-Centroid_Y; Hit-Centroid (cm); entries", t), 100, -15, 15);
+
     //plot per station
     for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
       plots[Form("%s_ClusterSize_st%dX", t, st)] = new TH1D (Form("%s_ClusterSize_st%dX", t, st), Form("%s_ClusterSize_st%dX; cluster size; entries", t, st), nChannels, 0, nChannels);
@@ -99,22 +103,23 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
       plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
       plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
 
-
-      plots[Form("%s_Hits_Position_st%dX", t, st)] = new TH1D (Form("%s_Hits_Position_%dX", t, st), Form("%s_Hits_Position_%dX; x (cm); entries", t, st), 1000, -100, 100);
-      plots[Form("%s_Hits_Position_st%dY", t, st)] = new TH1D (Form("%s_Hits_Position_%dY", t, st), Form("%s_Hits_Position_%dY; y (cm); entries", t, st), 1000, -100, 100);
-
+      //plots for hit position in SciFi Planes
+      plots[Form("%s_Hits_Position_st%dX", t, st)] = new TH1D (Form("%s_Hits_Position_%dX", t, st), Form("%s_Hits_Position_%dX; x (cm); entries", t, st), 80, -45, -31);
+      plots[Form("%s_Hits_Position_st%dY", t, st)] = new TH1D (Form("%s_Hits_Position_%dY", t, st), Form("%s_Hits_Position_%dY; y (cm); entries", t, st), 80, 37.5, 51.5);
 
       //plots[Form("%s_Centroid_Position_st%d", t, st)] = new TH2D(Form("%s_Centroid_Position_st%d", t, st), Form("%s_Centroid_Position_st%d; x (cm); y (cm)", t, st), nChannels+1, -0.5*.025, (nChannels+0.5)*.025, nChannels+1, -0.5*.025, (nChannels+0.5)*.025);
       plots[Form("%s_HitDistribution_st%d", t, st)] = new TH2D (Form("%s_HitDistribution_st%d", t, st), Form("%s_HitDistribution_st%d; n hit %dX; n hit %dY", t,  st, st, st), nChannels, 0, nChannels, nChannels, 0, nChannels);
       plots[Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st)] = new TH2D(Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d", t, st), Form("%s_QDCUS_vs_QDCScifi_ShStart_st%d; US qdc; SciFi qdc;", t, st), 1500, -1000, 20000, 1500, -1000, 8000);  
     
+      //plots for muons
       plots[Form("%s_Muon_Position_X_st%d", t, st)] = new TH1D(Form("%s_Muon_Position_X_st%d", t, st), Form("%s_Muon_Position_X_st%d; x (cm); entries", t, st), 1000, -44.75, -44.6);
       plots[Form("%s_Muon_Position_Y_st%d", t, st)] = new TH1D(Form("%s_Muon_Position_Y_st%d", t, st), Form("%s_Muon_Position_Y_st%d; y (cm); entries", t, st), 1000, 37.77, 37.93);
       plots[Form("%s_Muon_Position_Z.x_st%d", t, st)] = new TH1D(Form("%s_Muon_Position_Z.x_st%d", t, st), Form("%s_Muon_Position_Z.x_st%d; z (cm); entries", t, st), 1000, 315, 360);
       plots[Form("%s_Muon_Position_Z.y_st%d", t, st)] = new TH1D(Form("%s_Muon_Position_Z.y_st%d", t, st), Form("%s_Muon_Position_Z.y_st%d; z (cm); entries", t, st), 1000, 315, 360);
- 
-    }
+   
+      }
 
+    //plots for muon fit analysis
     plots[Form("%s_Slope_Muon_X", t)] = new TH1D(Form("%s_Slope_Muon_X", t), Form("%s_Slope_Muon_X; slope; entries", t), 1000, -0.005, 0.005);
     plots[Form("%s_Slope_Muon_Y", t)] = new TH1D(Form("%s_Slope_Muon_Y", t), Form("%s_Slope_Muon_Y; slope; entries", t), 1000, -0.005, 0.005);
 
@@ -123,19 +128,24 @@ void definePlots( cfg configuration, std::map<std::string, TH1*> &plots, std::ma
 
     for (int start_st = 1; start_st < configuration.SCIFI_STATIONS+1; ++start_st){
       for (int st = start_st; st < configuration.SCIFI_STATIONS+1; ++st){
-        plots[Form("%s_Centroid_Position_st%d_start%d", t, st, start_st)] = new TH2D(Form("%s_Centroid_Position_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_st%d_start%d; x (cm); y (cm)", t, st, start_st), 1000, -44.69, -44.66, 1000, 37.84, 37.9);
-        plots[Form("%s_Centroid_Position_X_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_X_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_X_st%d_start%d; x (cm); entries", t, st, start_st), 1000, -44.69, -44.66);
-        plots[Form("%s_Centroid_Position_Y_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Y_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Y_st%d_start%d; y (cm); entries", t, st, start_st), 1000, 37.84, 37.9);
-        plots[Form("%s_Centroid_Position_Z.x_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Z.x_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Z.x_st%d_start%d; z (cm); entries", t, st, start_st), 1000, 315, 360);
-        plots[Form("%s_Centroid_Position_Z.y_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Z.y_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Z.y_st%d_start%d; z (cm); entries", t, st, start_st), 1000, 315, 360);
+        //plots for centroid positions in each SciFi layer
+        plots[Form("%s_Centroid_Position_st%d_start%d", t, st, start_st)] = new TH2D(Form("%s_Centroid_Position_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_st%d_start%d; x (cm); y (cm)", t, st, start_st), 100, -45, -31, 100, 37.5, 51.5);
+        plots[Form("%s_Centroid_Position_X_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_X_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_X_st%d_start%d; x (cm); entries", t, st, start_st), 100, -45, -31);
+        plots[Form("%s_Centroid_Position_Y_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Y_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Y_st%d_start%d; y (cm); entries", t, st, start_st), 100, 37.5, 51.5);
+        plots[Form("%s_Centroid_Position_Z.x_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Z.x_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Z.x_st%d_start%d; z (cm); entries", t, st, start_st), 100, 315, 360);
+        plots[Form("%s_Centroid_Position_Z.y_st%d_start%d", t, st, start_st)] = new TH1D(Form("%s_Centroid_Position_Z.y_st%d_start%d", t, st, start_st), Form("%s_Centroid_Position_Z.y_st%d_start%d; z (cm); entries", t, st, start_st), 100, 315, 360);
       }
 
-      plots[Form("%s_Slope_X_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Slope_X_start%d", tag.c_str(), start_st), Form("%s_Slope_X_start%d; slope; entries", tag.c_str(), start_st), 80, -0.00004, 0.00004);
-      plots[Form("%s_Slope_Y_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Slope_Y_start%d", tag.c_str(), start_st), Form("%s_Slope_Y_start%d; slope; entries", tag.c_str(), start_st), 80, 0, 0.0016);
+      //plots for centroid analysis
+      plots[Form("%s_Slope_X_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Slope_X_start%d", tag.c_str(), start_st), Form("%s_Slope_X_start%d; slope; entries", tag.c_str(), start_st), 80, -0.2, 0.2);
+      plots[Form("%s_Slope_Y_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Slope_Y_start%d", tag.c_str(), start_st), Form("%s_Slope_Y_start%d; slope; entries", tag.c_str(), start_st), 80, -0.2, 0.2);
 
-      plots[Form("%s_Intercept_X_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Intercept_X_start%d", tag.c_str(), start_st), Form("%s_intercept_X_start%d; intercept; entries", tag.c_str(), start_st), 80, -44.69, -44.655);
-      plots[Form("%s_Intercept_Y_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Intercept_Y_start%d", tag.c_str(), start_st), Form("%s_intercept_Y_start%d; intercept; entries", tag.c_str(), start_st), 80, 37.3, 37.85);
+      plots[Form("%s_Intercept_X_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Intercept_X_start%d", tag.c_str(), start_st), Form("%s_intercept_X_start%d; intercept (cm); entries", tag.c_str(), start_st), 100, -100, 0);
+      plots[Form("%s_Intercept_Y_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Intercept_Y_start%d", tag.c_str(), start_st), Form("%s_intercept_Y_start%d; intercept (cm); entries", tag.c_str(), start_st), 100, 0, 100);
 
+      plots[Form("%s_Chi2/ndf_X_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Chi2/ndf_X_start%d", tag.c_str(), start_st), Form("%s_Chi2/ndf_X_start%d; chi2/ndf; entries", tag.c_str(), start_st), 100, 0, 2.5);
+      plots[Form("%s_Chi2/ndf_Y_start%d", tag.c_str(), start_st)] = new TH1D(Form("%s_Chi2/ndf_Y_start%d", tag.c_str(), start_st), Form("%s_Chi2/ndf_Y_start%d; chi2/ndf; entries", tag.c_str(), start_st), 100, 0, 2.5);
+    
     }
 
     for (int st = 1; st < configuration.SCIFI_STATIONS+1; ++st){
@@ -356,10 +366,11 @@ double timeCutGuil (std::vector<SciFiPlaneView> &Scifi, std::vector<USPlaneView>
   return referenceTime;
 }
 
-void fitAndStoreSlopes(const std::vector<double> &x_positions, const std::vector<double> &z_positions_x, const std::vector<double> &y_positions, const std::vector<double> &z_positions_y, std::map<std::string, TH1*> &plots, const std::string &t, int shStart);
+// Defined these new functions used later fro the analysis of centroids
+
+void fitAndStoreSlopes(const std::vector<double> &x_positions, const std::vector<double> &z_positions_x, const std::vector<double> &y_positions, const std::vector<double> &z_positions_y, std::map<std::string, TH1*> &plots, const std::string &t, int shStart, double &first_x, double &first_y);
 
 void fitMuonSlopes(const std::vector<double> &mux_positions, const std::vector<double> &muz_positions_x, const std::vector<double> &muy_positions, const std::vector<double> &muz_positions_y, std::map<std::string, TH1*> &plots, const std::string &t);
-
 
 void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlaneView> US, std::map<std::string, TH1*> &plots, std::string &t, int shStart, double referenceTime=0) {
   int showerHits{0};
@@ -367,6 +378,9 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
   double USQDCSum{0};
   double Small_USQDCSum{0}, Large_USQDCSum{0};
   auto refCentroid{Scifi_detector[0].getCentroid()};
+
+  double start_x;
+  double start_y;
 
   std::vector<double> x_positions, y_positions, z_positions_x, z_positions_y;
 
@@ -380,25 +394,33 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     auto station{plane.getStation()};
     auto pos{plane.getGeometry()};
 
-
+    // Used to validate the method checking if the hit positions reconstruction with the fit parameter are 
+    // well approximated wrt the original hits positions of the beam
     bool xValid = std::any_of(pos.x.begin(), pos.x.end(), [](double value) { return value > DEFAULT; });
     bool yValid = std::any_of(pos.y.begin(), pos.y.end(), [](double value) { return value > DEFAULT; });
 
     if (shStart != -1 && xValid && yValid) {
         for (const auto& x : pos.x) {
             if (x > DEFAULT) {
-                //std::cout <<"X: " <<x <<" nel piano " <<plane.getStation() <<std::endl;
+                //std::cout <<"X: " <<x <<" in the plane " <<plane.getStation() <<std::endl;
                 plots[Form("%s_Hits_Position_st%dX", t.c_str(), plane.getStation())]->Fill(x);
             }
         }
         for (const auto& y : pos.y) {
             if (y > DEFAULT) {
-                //std::cout <<"Y: " <<y <<" nel piano " <<plane.getStation() <<std::endl;
+                //std::cout <<"Y: " <<y <<" in the plane " <<plane.getStation() <<std::endl;
                 plots[Form("%s_Hits_Position_st%dY", t.c_str(), plane.getStation())]->Fill(y);
             }
         }
-    }
 
+        // Avarage hit position in the First SciFi plane
+        if (station==1 ) {
+          start_x = std::accumulate(pos.x.begin(), pos.x.end(), 0, [](int total, int current) {return current > DEFAULT ? total + current : total;})
+                                    /std::count_if(pos.x.begin(), pos.x.end(), [](int current) {return current > DEFAULT;});
+          start_y = std::accumulate(pos.y.begin(), pos.y.end(), 0, [](int total, int current) {return current > DEFAULT ? total + current : total;})
+                                    /std::count_if(pos.y.begin(), pos.y.end(), [](int current) {return current > DEFAULT;});
+        }
+    }
 
     if (shStart != -1 && station >= shStart && centroid.x > DEFAULT && centroid.y > DEFAULT) {
         plots[Form("%s_Centroid_Position_st%d_start%d", t.c_str(), station, shStart)]->Fill(centroid.x, centroid.y);
@@ -517,38 +539,80 @@ void fillPlots (std::vector<SciFiPlaneView> &Scifi_detector, std::vector<USPlane
     plots[Form("%s_Shower_SciFi_QDC_shStart%d", t.c_str(), shStart)]->Fill(partialScifiQDCSum);
   }
 
-  fitAndStoreSlopes(x_positions, z_positions_x, y_positions, z_positions_y, plots, t, shStart);
+  fitAndStoreSlopes(x_positions, z_positions_x, y_positions, z_positions_y, plots, t, shStart, start_x, start_y);
 
   fitMuonSlopes(mux_positions, muz_positions_x, muy_positions, muz_positions_y, plots, t);
   
   //std::cout<<"SciFi:\t"<<partialScifiQDCSum*0.063194<<"\t US:\t"<<USQDCSum*0.0130885<<"\t Tot Energy:\t"<<partialScifiQDCSum*0.063194 + USQDCSum*0.0130885<<"\n";
 }
 
-void fitAndStoreSlopes(const std::vector<double> &x_positions, const std::vector<double> &z_positions_x, const std::vector<double> &y_positions, const std::vector<double> &z_positions_y, std::map<std::string, TH1*> &plots, const std::string &t, int shStart) {
-    if (x_positions.size() < 2 || y_positions.size() < 2) return; 
+// This function fits linear functions (slopes and intercepts) to the x and y positions
+// against their corresponding z positions. The slopes, intercepts, and reduced chi-squared 
+// values are then stored in the corresponding histograms. If 'shStart' is 2, it also calculates 
+// and stores the intercept at the first plane and compares it with a reference position.
 
+void fitAndStoreSlopes(const std::vector<double> &x_positions, const std::vector<double> &z_positions_x, const std::vector<double> &y_positions, const std::vector<double> &z_positions_y, std::map<std::string, TH1*> &plots, const std::string &t, int shStart, double &first_x, double &first_y) {
+    if (x_positions.size() < 2 || y_positions.size() < 2) return;  // Skip if not enough data points
+
+    // Fit a linear function to the x positions as a function of z
     TGraph *graph_x = new TGraph(z_positions_x.size(), &z_positions_x[0], &x_positions[0]);
     TF1 *fit_x = new TF1("fit_x", "pol1", z_positions_x.front(), z_positions_x.back());
     graph_x->Fit(fit_x, "Q");
     double slope_x = fit_x->GetParameter(1);
     double intercept_x = fit_x->GetParameter(0);
+    double chi2_x = fit_x->GetChisquare();
+    int ndf_x = fit_x->GetNDF();
+    double chi2Red_x = chi2_x / ndf_x;
+
+    // Store results for slope, intercept, and chi-squared / ndf in the plots
     plots[Form("%s_Slope_X_start%d", t.c_str(), shStart)]->Fill(slope_x);
     plots[Form("%s_Intercept_X_start%d", t.c_str(), shStart)]->Fill(intercept_x);
+    plots[Form("%s_Chi2/ndf_X_start%d", t.c_str(), shStart)]->Fill(chi2Red_x);
 
+    // Fit a linear function to the y positions as a function of z
     TGraph *graph_y = new TGraph(z_positions_y.size(), &z_positions_y[0], &y_positions[0]);
     TF1 *fit_y = new TF1("fit_y", "pol1", z_positions_y.front(), z_positions_y.back());
     graph_y->Fit(fit_y, "Q");
     double slope_y = fit_y->GetParameter(1);
     double intercept_y = fit_y->GetParameter(0);
+    double chi2_y = fit_y->GetChisquare();
+    int ndf_y = fit_y->GetNDF();
+    double chi2Red_y = chi2_y / ndf_y;
+
+    // Store results for slope, intercept, and chi-squared / ndf for y
     plots[Form("%s_Slope_Y_start%d", t.c_str(), shStart)]->Fill(slope_y);
     plots[Form("%s_Intercept_Y_start%d", t.c_str(), shStart)]->Fill(intercept_y);
+    plots[Form("%s_Chi2/ndf_Y_start%d", t.c_str(), shStart)]->Fill(chi2Red_y);
 
-    // Clean up
+    // If shStart equals 2, calculate intercept positions at first SciFi Plane for comparison
+    if (shStart == 2) {
+        double z_first_x = 319.9;  // Position of the first plane in x
+        double z_first_y = 319.3;  // Position of the first plane in y
+
+        double intercept_x_at_z_first = slope_x * z_first_x + intercept_x;
+        double intercept_y_at_z_first = slope_y * z_first_y + intercept_y;
+
+        // Store intercepts at the first plane in the plots
+        plots[Form("%s_Intercept_Position_in_st1_X", t.c_str())]->Fill(intercept_x_at_z_first);
+        plots[Form("%s_Intercept_Position_in_st1_Y", t.c_str())]->Fill(intercept_y_at_z_first);
+
+        // Calculate the difference between the first hit positions and the intercept at z_first
+        double diff_x = first_x - intercept_x_at_z_first;
+        double diff_y = first_y - intercept_y_at_z_first;
+
+        // Store the differences (hit position - centroid) in the plots
+        plots[Form("%s_HitPosition-Centroid_X", t.c_str())]->Fill(diff_x);
+        plots[Form("%s_HitPosition-Centroid_Y", t.c_str())]->Fill(diff_y);
+    }
+
+    // Clean up memory
     delete graph_x;
     delete graph_y;
     delete fit_x;
     delete fit_y;
 }
+
+// Same procedure for fitting the muons positions
 
 void fitMuonSlopes(const std::vector<double> &mux_positions, const std::vector<double> &muz_positions_x, const std::vector<double> &muy_positions, const std::vector<double> &muz_positions_y, std::map<std::string, TH1*> &plots, const std::string &t) {
     if (mux_positions.size() == 4 && muy_positions.size() == 4) { 
@@ -578,29 +642,7 @@ void fitMuonSlopes(const std::vector<double> &mux_positions, const std::vector<d
     else return;
 }
 
-void fitGaussianAndStoreSlopesIntercepts(std::map<std::string, TH1*> &plots) {
-    for (auto &plot : plots) {
-        const std::string& histName = plot.first;
-
-        // Check if the histogram name corresponds to slope or intercept
-        if (histName.find("Slope") != std::string::npos || histName.find("Intercept") != std::string::npos) {
-            if (plot.second->GetEntries() > 0) {
-                // Perform Gaussian fit
-                TF1 *gausFit = new TF1("gausFit", "gaus");
-                plot.second->Fit(gausFit, "Q");
-
-                // Extract fit parameters
-                double mean = gausFit->GetParameter(1);
-                double sigma = gausFit->GetParameter(2);
-
-                // Print fit results to the console
-                std::cout << "Histogram: " << histName 
-                          << " | Mean: " << mean 
-                          << " | Sigma: " << sigma << std::endl;
-            }
-        }
-    }
-}
+// This function reads the geometry configuration and initializes the Scifi and MuFilter detector objects. 
 
 void read_geo(Scifi*& ScifiDet, MuFilter*& MufiDet, const std::string geoFilePath) {
     TPython::Exec("import SndlhcGeo");
@@ -689,10 +731,10 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
   }
 
   //geom for TI18
-  std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/physics/2023/geofile_sndlhc_TI18_V3_2023.root";
+  // std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/physics/2023/geofile_sndlhc_TI18_V3_2023.root";
 
   //geom for Test Beam
-  // std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/geofile_sndlhc_H8_2023_3walls.root";
+  std::string geoFilePath = "/eos/experiment/sndlhc/convertedData/commissioning/testbeam_June2023_H8/geofile_sndlhc_H8_2023_3walls.root";
   
   Scifi* ScifiDet = nullptr;
   MuFilter* MufiDet = nullptr;
@@ -784,32 +826,34 @@ void runAnalysis(int runNumber, int nFiles, bool isTB, bool isMulticore = false,
     // }
 
     if (is_apart) {
-      double refT = timeCutGuil(scifi_planes_guil, us_planes_guil);
-      sh_start[3] = checkShower_with_clusters(scifi_planes_guil);
-      sh_start[4] = checkShower_with_density(scifi_planes_guil);
-      sh_start[5] = checkShower_with_F(scifi_planes_guil);
+    //  if (is_one_hit) {//to have both cuts in hit and in time
+        double refT = timeCutGuil(scifi_planes_guil, us_planes_guil);
+        sh_start[3] = checkShower_with_clusters(scifi_planes_guil);
+        sh_start[4] = checkShower_with_density(scifi_planes_guil);
+        sh_start[5] = checkShower_with_F(scifi_planes_guil);
 
-      // if (target != -1){
-      //   std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
-      // }
-      // if (sh_start[4] > 0 && isTB) {
-      //   event_number = header->GetEventNumber();
-      //   wall = sh_start[4] - 1;
-      //   tree->Fill();
-      // }
-      // if (sh_start[4] > 0 && !isTB) {
-      //   event_number = header->GetEventNumber();
-      //   wall = sh_start[4];
-      //   tree->Fill();
-      // }
+        // if (target != -1){
+        //   std::cout<<"RUN "<<runNumber<<"\t ev:\t"<<m<<"\t clusters:\t"<<sh_start[3]<<"\t density:\t"<<sh_start[4]<<"\t F:\t"<<sh_start[5]<<std::endl;
+        // }
+        // if (sh_start[4] > 0 && isTB) {
+        //   event_number = header->GetEventNumber();
+        //   wall = sh_start[4] - 1;
+        //   tree->Fill();
+        // }
+        // if (sh_start[4] > 0 && !isTB) {
+        //   event_number = header->GetEventNumber();
+        //   wall = sh_start[4];
+        //   tree->Fill();
+        // }
 
-      // plots[Form("%s_ShowerStart_with_clusters", tags[2].c_str())]->Fill(sh_start[3]);
-      plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
-      // plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(sh_start[5]);
-      for (auto &plane : scifi_planes_guil) plane.findCentroid();
-      for (auto &plane : scifi_planes_guil) plane.findMuon();
-      fillPlots(scifi_planes_guil, us_planes_guil, plots, tags[2], sh_start[4], refT);  
-      }
+        // plots[Form("%s_ShowerStart_with_clusters", tags[2].c_str())]->Fill(sh_start[3]);
+        plots[Form("%s_ShowerStart_with_density", tags[2].c_str())]->Fill(sh_start[4]);
+        // plots[Form("%s_ShowerStart_with_F", tags[2].c_str())]->Fill(sh_start[5]);
+        for (auto &plane : scifi_planes_guil) plane.findCentroid();
+        for (auto &plane : scifi_planes_guil) plane.findMuon();
+        fillPlots(scifi_planes_guil, us_planes_guil, plots, tags[2], sh_start[4], refT);  
+    //  }
+    }
 
     // for (int k{0}; k < shower_tags.size(); ++k) {
     //   plots[Form("%s_%s_vs_%s_%s", tags[1].c_str(), shower_tags[k].c_str(), tags[2].c_str(), shower_tags[k].c_str())]->Fill(sh_start[k],sh_start[k+3]);

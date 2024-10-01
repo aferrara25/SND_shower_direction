@@ -1,13 +1,559 @@
 WARNING: not updating modulefiles
-Use alienv list to list loaded modules.
-Loading sndsw/latest
-  Loading requirement: BASE/1.0
+ERROR: sndsw/latest was not found
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/Track.h
+   requested to autoload type genfit::Track
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MeasuredStateOnPlane.h
+   requested to autoload type genfit::MeasuredStateOnPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/AbsFinitePlane.h
+   requested to autoload type genfit::AbsFinitePlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/AbsFitter.h
+   requested to autoload type genfit::AbsFitter
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for DetPlane.h
+   requested to autoload type genfit::DetPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MaterialProperties.h
+   requested to autoload type genfit::MaterialProperties
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for AbsTrackRep.h
+   requested to autoload type genfit::AbsTrackRep
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for StateOnPlane.h
+   requested to autoload type genfit::StateOnPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for AbsHMatrix.h
+   requested to autoload type genfit::AbsHMatrix
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MeasurementOnPlane.h
+   requested to autoload type genfit::MeasurementOnPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/AbsFitterInfo.h
+   requested to autoload type genfit::AbsFitterInfo
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/AbsMeasurement.h
+   requested to autoload type genfit::AbsMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for AbsBField.h
+   requested to autoload type genfit::AbsBField
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/FieldManager.h
+   requested to autoload type genfit::FieldManager
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/FitStatus.h
+   requested to autoload type genfit::FitStatus
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/core/include/ThinScatterer.h
+   requested to autoload type genfit::ThinScatterer
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TrackCandHit.h
+   requested to autoload type genfit::TrackCandHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TrackCand.h
+   requested to autoload type genfit::TrackCand
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TrackPoint.h
+   requested to autoload type genfit::TrackPoint
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for AbsKalmanFitter.h
+   requested to autoload type genfit::AbsKalmanFitter
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/eventDisplay/include/EventDisplay.h
+   requested to autoload type genfit::EventDisplay
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fields/include/BellField.h
+   requested to autoload type genfit::BellField
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fields/include/ConstField.h
+   requested to autoload type genfit::ConstField
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fields/include/FairShipFields.h
+   requested to autoload type genfit::FairShipFields
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fields/include/GoliathField.h
+   requested to autoload type genfit::GoliathField
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/finitePlanes/include/RectangularFinitePlane.h
+   requested to autoload type genfit::RectangularFinitePlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/DAF.h
+   requested to autoload type genfit::DAF
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/KalmanFitStatus.h
+   requested to autoload type genfit::KalmanFitStatus
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/KalmanFittedStateOnPlane.h
+   requested to autoload type genfit::KalmanFittedStateOnPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/KalmanFitter.h
+   requested to autoload type genfit::KalmanFitter
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ReferenceStateOnPlane.h
+   requested to autoload type genfit::ReferenceStateOnPlane
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/KalmanFitterInfo.h
+   requested to autoload type genfit::KalmanFitterInfo
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/fitters/include/KalmanFitterRefTrack.h
+   requested to autoload type genfit::KalmanFitterRefTrack
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/GBL/include/GFGbl.h
+   requested to autoload type genfit::GFGbl
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/FullMeasurement.h
+   requested to autoload type genfit::FullMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/HMatrixPhi.h
+   requested to autoload type genfit::HMatrixPhi
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/HMatrixU.h
+   requested to autoload type genfit::HMatrixU
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/HMatrixUV.h
+   requested to autoload type genfit::HMatrixUV
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/HMatrixUnit.h
+   requested to autoload type genfit::HMatrixUnit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/HMatrixV.h
+   requested to autoload type genfit::HMatrixV
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/PlanarMeasurement.h
+   requested to autoload type genfit::PlanarMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for SpacepointMeasurement.h
+   requested to autoload type genfit::SpacepointMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/ProlateSpacepointMeasurement.h
+   requested to autoload type genfit::ProlateSpacepointMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/WireMeasurement.h
+   requested to autoload type genfit::WireMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/WirePointMeasurement.h
+   requested to autoload type genfit::WirePointMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/measurements/include/WireTrackCandHit.h
+   requested to autoload type genfit::WireTrackCandHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for RKTrackRep.h
+   requested to autoload type genfit::RKTrackRep
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/trackReps/include/MaterialEffects.h
+   requested to autoload type genfit::MaterialEffects
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/trackReps/include/TGeoMaterialInterface.h
+   requested to autoload type genfit::TGeoMaterialInterface
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/utilities/include/HelixTrackModel.h
+   requested to autoload type genfit::HelixTrackModel
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/utilities/include/MeasurementCreator.h
+   requested to autoload type genfit::MeasurementCreator
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/utilities/include/mySpacepointDetectorHit.h
+   requested to autoload type genfit::mySpacepointDetectorHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for /home/sndco/SNDBUILD-truf/sw/SOURCES/sndsw/master/0/genfit/utilities/include/mySpacepointMeasurement.h
+   requested to autoload type genfit::mySpacepointMeasurement
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ShipHit.h
+   requested to autoload type ShipHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for SndlhcHit.h
+   requested to autoload type SndlhcHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for Hit2MCPoints.h
+   requested to autoload type Hit2MCPoints
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ShipStack.h
+   requested to autoload type ShipStack
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ShipMCTrack.h
+   requested to autoload type ShipMCTrack
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ShipParticle.h
+   requested to autoload type ShipParticle
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for TrackInfo.h
+   requested to autoload type TrackInfo
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for Floor.h
+   requested to autoload type Floor
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for boxTarget.h
+   requested to autoload type boxTarget
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for EmulsionDet.h
+   requested to autoload type EmulsionDet
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for EmulsionDetPoint.h
+   requested to autoload type EmulsionDetPoint
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for EmulsionDetContFact.h
+   requested to autoload type EmulsionDetContFact
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for SNDLHCEventHeader.h
+   requested to autoload type SNDLHCEventHeader
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for Scifi.h
+   requested to autoload type Scifi
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for ScifiPoint.h
+   requested to autoload type ScifiPoint
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MuFilter.h
+   requested to autoload type MuFilter
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MuFilterPoint.h
+   requested to autoload type MuFilterPoint
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for MuFilterHit.h
+   requested to autoload type MuFilterHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for sndScifiHit.h
+   requested to autoload type sndScifiHit
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for sndCluster.h
+   requested to autoload type sndCluster
+Error in cling::AutoLoadingVisitor::InsertIntoAutoLoadingState:
+   Missing FileEntry for sndRecoTrack.h
+   requested to autoload type sndRecoTrack
+G__shipLHCDict dictionary payload:5:10: fatal error: 'Floor.h' file not found
+#include "Floor.h"
+         ^~~~~~~~~
+Error in <TInterpreter::AutoParse>: Error parsing payload code for class Scifi with content:
+
+#line 1 "G__shipLHCDict dictionary payload"
+
+
+#define _BACKWARD_BACKWARD_WARNING_H
+// Inline headers
+#include "Floor.h"
+#include "boxTarget.h"
+#include "EmulsionDet.h"
+#include "EmulsionDetPoint.h"
+#include "EmulsionDetContFact.h"
+#include "Scifi.h"
+#include "ScifiPoint.h"
+#include "MuFilter.h"
+#include "MuFilterPoint.h"
+#include "MuFilterHit.h"
+#include "sndScifiHit.h"
+#include "sndCluster.h"
+#include "SNDLHCEventHeader.h"
+#include "sndRecoTrack.h"
+
+#undef  _BACKWARD_BACKWARD_WARNING_H
+
+In file included from input_line_8:1:
+In file included from /afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.h:47:43: error: must use 'class' tag to refer to type 'Scifi' in this scope
+  SciFiPlaneView(cfg c, TClonesArray *h,  Scifi *det, int b, int e, int s);
+                                          ^
+                                          class 
+G__shipLHCDict dictionary forward declarations' payload:11:60: note: class 'Scifi' is hidden by a non-type declaration of 'Scifi' here
+class __attribute__((annotate("$clingAutoload$Scifi.h")))  Scifi;
+                                                           ^
+G__shipLHCDict dictionary payload:5:10: fatal error: 'Floor.h' file not found
+#include "Floor.h"
+         ^~~~~~~~~
+Error in <TInterpreter::AutoParse>: Error parsing payload code for class sndScifiHit with content:
+
+#line 1 "G__shipLHCDict dictionary payload"
+
+
+#define _BACKWARD_BACKWARD_WARNING_H
+// Inline headers
+#include "Floor.h"
+#include "boxTarget.h"
+#include "EmulsionDet.h"
+#include "EmulsionDetPoint.h"
+#include "EmulsionDetContFact.h"
+#include "Scifi.h"
+#include "ScifiPoint.h"
+#include "MuFilter.h"
+#include "MuFilterPoint.h"
+#include "MuFilterHit.h"
+#include "sndScifiHit.h"
+#include "sndCluster.h"
+#include "SNDLHCEventHeader.h"
+#include "sndRecoTrack.h"
+
+#undef  _BACKWARD_BACKWARD_WARNING_H
+
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:45:20: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        auto hit = static_cast<sndScifiHit *>(sf_hits->At(i));
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:50:28: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:50:86: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:50:152: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                                                                                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:55:13: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:56:31: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+            qdc.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:59:31: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+            qdc.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:66:28: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:66:86: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:66:152: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                                                                                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:67:13: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:68:41: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+            hitTimestamps.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:71:41: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+            hitTimestamps.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:79:20: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        auto hit = static_cast<sndScifiHit *>(sf_hits->At(i));
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:80:28: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:80:86: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:80:152: error: static_cast from 'TObject *' to 'sndScifiHit *', which are not related by inheritance, is not allowed
+        int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
+                                                                                                                                                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+G__shipLHCDict dictionary forward declarations' payload:16:66: note: 'sndScifiHit' is incomplete
+class __attribute__((annotate("$clingAutoload$sndScifiHit.h")))  sndScifiHit;
+                                                                 ^
+In file included from input_line_8:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/SciFiPlaneView.cpp:86:17: error: member access into incomplete type 'Scifi'
+        ScifiDet->GetSiPMPosition(detectorID, A, B);
+                ^
+G__shipLHCDict dictionary forward declarations' payload:11:60: note: forward declaration of 'Scifi'
+class __attribute__((annotate("$clingAutoload$Scifi.h")))  Scifi;
+                                                           ^
+In file included from input_line_19:1:
+In file included from /afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.h:17:15: error: unknown type name 'cfg'
+  USPlaneView(cfg c, TClonesArray *h, int b, int e, int s);
+              ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.h:21:9: error: unknown type name 'cfg'
+  const cfg getConfig() const;
+        ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.h:39:3: error: unknown type name 'cfg'
+  cfg config;
+  ^
+In file included from input_line_19:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:4:26: error: unknown type name 'cfg'
+USPlaneView::USPlaneView(cfg c, TClonesArray *h, int b, int e, int s) : 
+                         ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:10:37: error: use of undeclared identifier 'DEFAULT'
+    qdc.resize(config.US_NCHANNELS, DEFAULT);
+                                    ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:11:47: error: use of undeclared identifier 'DEFAULT'
+    hitTimestamps.resize(config.US_NCHANNELS, DEFAULT);
+                                              ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:20:20: error: use of undeclared identifier 'DEFAULT'
+        if (qdc[i]>DEFAULT) {
+                   ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:34:32: error: unknown type name 'MuFilterHit'
+        auto hit = static_cast<MuFilterHit *>(mufi_hits->At(j)); 
+                               ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:35:41: error: no member named 'GetDetectorID' in 'TObject'
+        int bar = static_cast<int>(hit->GetDetectorID()%1000);
+                                   ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:37:23: error: no member named 'isMasked' in 'TObject'
+            if (!hit->isMasked(i) && hit->GetSignal(i) > DEFAULT) {
+                 ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:37:43: error: no member named 'GetSignal' in 'TObject'
+            if (!hit->isMasked(i) && hit->GetSignal(i) > DEFAULT) {
+                                     ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:37:58: error: use of undeclared identifier 'DEFAULT'
+            if (!hit->isMasked(i) && hit->GetSignal(i) > DEFAULT) {
+                                                         ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:42:40: error: no member named 'GetSignal' in 'TObject'
+                qdc[16*bar + i] = hit->GetSignal(i);
+                                  ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:51:32: error: unknown type name 'MuFilterHit'
+        auto hit = static_cast<MuFilterHit *>(mufi_hits->At(j)); 
+                               ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:52:41: error: no member named 'GetDetectorID' in 'TObject'
+        int bar = static_cast<int>(hit->GetDetectorID()%1000);
+                                   ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:54:23: error: no member named 'isMasked' in 'TObject'
+            if (!hit->isMasked(i) && hit->GetSignal(i) > -999) {
+                 ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:54:43: error: no member named 'GetSignal' in 'TObject'
+            if (!hit->isMasked(i) && hit->GetSignal(i) > -999) {
+                                     ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:58:50: error: no member named 'GetTime' in 'TObject'
+                hitTimestamps[16*bar + i] = hit->GetTime(i);
+                                            ~~~  ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/USPlaneView.cpp:65:18: error: use of undeclared identifier 'DEFAULT'
+    qdc[index] = DEFAULT;
+                 ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+In file included from input_line_20:1:
+In file included from /afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:5:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/Inclusion.h:29:10: fatal error: 'Scifi.h' file not found
+#include "Scifi.h"
+         ^~~~~~~~~
 cling::PHOptLevel: conflicting `#pragma cling optimize` directives: was already set to 0
 Ignoring higher value of 2
-Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is cave. Master volume is cave
-Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
-Info in <TGeoManager::Voxelize>: Voxelizing...
-Info in <TGeoManager::CountLevels>: max level = 7, max placements = 2829
-Info in <TGeoManager::CloseGeometry>: 90792 nodes/ 78 volume UID's in FAIR geometry
-Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+In file included from input_line_20:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:105:144: error: use of undeclared identifier 'TOFPETperBOARD'
+      plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
+                                                                                                                                               ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:105:197: error: use of undeclared identifier 'TOFPETperBOARD'
+      plots[Form("%s_Tofpet_st%dX", t, st)] = new TH1D(Form("%s_Tofpet_st%dX", t, st), Form("%s_Tofpet_st%dX; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
+                                                                                                                                                                                                    ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:106:144: error: use of undeclared identifier 'TOFPETperBOARD'
+      plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
+                                                                                                                                               ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:106:197: error: use of undeclared identifier 'TOFPETperBOARD'
+      plots[Form("%s_Tofpet_st%dY", t, st)] = new TH1D(Form("%s_Tofpet_st%dY", t, st), Form("%s_Tofpet_st%dY; tofpet number; entries", t, st), TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE, 0, TOFPETperBOARD*configuration.SCIFI_BOARDPERPLANE);
+                                                                                                                                                                                                    ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:171:81: error: unknown type name 'Scifi'
+std::vector<SciFiPlaneView> fillSciFi(cfg configuration, TClonesArray *sf_hits, Scifi* ScifiDet){
+                                                                                ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:183:30: error: unknown type name 'sndScifiHit'
+           st == static_cast<sndScifiHit *>(sf_hits->At(count))->GetStation()) {
+                             ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:183:66: error: no member named 'GetStation' in 'TObject'
+           st == static_cast<sndScifiHit *>(sf_hits->At(count))->GetStation()) {
+                                            ~~~~~~~~~~~~~~~~~~   ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:205:21: error: unknown type name 'MuFilterHit'
+        static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() != 2) {
+                    ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:205:59: error: no member named 'GetSystem' in 'TObject'
+        static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() != 2) {
+                                   ~~~~~~~~~~~~~~~~~~~~   ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:212:30: error: unknown type name 'MuFilterHit'
+           pl == static_cast<MuFilterHit *>(mufi_hits->At(count))->GetPlane() &&
+                             ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:212:68: error: no member named 'GetPlane' in 'TObject'
+           pl == static_cast<MuFilterHit *>(mufi_hits->At(count))->GetPlane() &&
+                                            ~~~~~~~~~~~~~~~~~~~~   ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:213:24: error: unknown type name 'MuFilterHit'
+           static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() == 2) { //stop before DS
+                       ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:213:62: error: no member named 'GetSystem' in 'TObject'
+           static_cast<MuFilterHit *>(mufi_hits->At(count))->GetSystem() == 2) { //stop before DS
+                                      ~~~~~~~~~~~~~~~~~~~~   ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:342:21: error: use of undeclared identifier 'DEFAULT'
+      if (time.x[i]>DEFAULT) {
+                    ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:345:21: error: use of undeclared identifier 'DEFAULT'
+      if (time.y[i]>DEFAULT) {
+                    ^
+In module 'std' imported from input_line_1:1:
+/usr/include/c++/11/bits/stl_vector.h:288:7: error: constructor for 'std::_Vector_base<double, std::allocator<double> >' must explicitly initialize the member '_M_impl' which does not have a default constructor
+      _Vector_base() = default;
+      ^
+/usr/include/c++/11/bits/stl_vector.h:487:7: note: in defaulted default constructor for 'std::_Vector_base<double, std::allocator<double> >' first required here
+      vector() = default;
+      ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:381:23: note: in defaulted default constructor for 'std::vector<double, std::allocator<double> >' first required here
+  std::vector<double> x_positions, y_positions, z_positions_x, z_positions_y;
+                      ^
+/usr/include/c++/11/bits/stl_vector.h:340:20: note: member is declared here
+      _Vector_impl _M_impl;
+                   ^
+/usr/include/c++/11/bits/stl_vector.h:128:14: note: 'std::_Vector_base<double, std::allocator<double> >::_Vector_impl' declared here
+      struct _Vector_impl
+             ^
+In file included from input_line_20:1:
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:393:93: error: use of undeclared identifier 'DEFAULT'
+    bool xValid = std::any_of(pos.x.begin(), pos.x.end(), [](double value) { return value > DEFAULT; });
+                                                                                            ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:394:93: error: use of undeclared identifier 'DEFAULT'
+    bool yValid = std::any_of(pos.y.begin(), pos.y.end(), [](double value) { return value > DEFAULT; });
+                                                                                            ^
+/afs/cern.ch/user/a/aferrara/sndlhc_bo_tbanalysis/sndlhc_bo_tbanalysis/ConvertedDataAnalyser.cpp:398:21: error: use of undeclared identifier 'DEFAULT'
+            if (x > DEFAULT) {
+                    ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+input_line_26:2:3: error: use of undeclared identifier 'runAnalysis'
+ (runAnalysis(100648, 5, true))
+  ^
+Error in <HandleInterpreterException>: Error evaluating expression (runAnalysis(100648, 5, true))
+Execution of your code was aborted.

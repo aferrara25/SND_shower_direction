@@ -53,10 +53,10 @@ void SciFiPlaneView::fillQDC() {
         }
         
         if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
-            qdc.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
+            qdc.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
         }
         else {
-            qdc.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
+            qdc.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetSignal(0);
         }
     }
 }
@@ -65,13 +65,18 @@ void SciFiPlaneView::fillTimestamps() {
     for (int i{begin}; i<end; ++i) {
         int position = 512*static_cast<sndScifiHit *>(sf_hits->At(i))->GetMat() + 64*static_cast<sndScifiHit *>(sf_hits->At(i))->GetTofpetID(0) + 63 - static_cast<sndScifiHit *>(sf_hits->At(i))->Getchannel(0);
         if (static_cast<sndScifiHit *>(sf_hits->At(i))->isVertical()) {
-            hitTimestamps.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+            hitTimestamps.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
         }
         else {
-            hitTimestamps.x[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
+            hitTimestamps.y[position] = static_cast<sndScifiHit *>(sf_hits->At(i))->GetTime(0);
         }
     }
 }
+
+// This function fills the geometry and depth arrays for a set of SciFi detector hits. 
+// For each hit, it calculates the position based on the sensor (SiPM) channel and 
+// determines if the hit is vertical or horizontal. Depending on the orientation, it 
+// assigns the appropriate X or Y coordinates for the geometry, along with the depth (Z).
 
 void SciFiPlaneView::fillGeometry() {
     TVector3 A, B;
@@ -81,21 +86,22 @@ void SciFiPlaneView::fillGeometry() {
         
         //hit->GetPosition(A,B);
 
-        int SiPMChan = hit->GetSiPMChan();
-        //int detectorID = hit->GetDetectorID();
-        ScifiDet->GetSiPMPosition(SiPMChan, A, B);
+        //int SiPMChan = hit->GetSiPMChan();
+        int detectorID = hit->GetDetectorID();
+        ScifiDet->GetSiPMPosition(detectorID, A, B);
         //ScifiDet->GetPosition(detectorID, A, B);     //error in Path of sndsw
 
         //std::cout<<"X= " <<A.X() <<", Y= " <<A.Y() <<std::endl;
         
         if (hit->isVertical()) {
-            geom.y[position] = A.Y();
-            depth.y[position] = A.Z();
-            std::cout<<"A.X= " <<A.X() <<" B.X= " <<B.X() <<" differenza " <<B.X()-A.X() <<std::endl;
-        }
-        else {
             geom.x[position] = A.X();
             depth.x[position] = A.Z();
+            // std::cout<<"A.X= " <<A.X() <<" B.X= " <<B.X() <<" Difference in X " <<B.Y()-A.Y() <<std::endl;  //check if the lenght of SciFi planes is 13cm
+        }
+        else {
+            geom.y[position] = A.Y();
+            depth.y[position] = A.Z();
+            // std::cout<<"A.Y= " <<A.Y() <<" B.Y= " <<B.Y() <<" Difference in Y " <<B.X()-A.X() <<std::endl;  //check if the lenght of SciFi planes is 13cm
         }
     }
 }
@@ -240,6 +246,8 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
     }
 }
 
+// Initially used for calculating the centroid of the shower, then it was modified.
+
 // void SciFiPlaneView::findCentroid(int windowSize) {
 //   // find shower centroid position in cm   
 //   auto slide = [&] (std::vector<double> &qdcarr, double &centroidCoordinate) {
@@ -264,6 +272,10 @@ bool SciFiPlaneView::infoDensity(int window, int min_hits) {
 //   slide(qdc.y, centroid.y);
 // }
 
+// This function calculates the centroid position and depth for hits in both the X and Y directions
+// by using QDC signal weights. It sums up the weighted positions and depths and computes the 
+// centroids accordingly, avoiding negative signals. The results are stored in `centroid` and `centroid_depth`.
+
 void SciFiPlaneView::findCentroid() {
     auto calculateCentroid = [](const std::vector<double>& signals, const std::vector<double>& positions, const std::vector<double>& depths, double& centroid, double& centroid_depth) {
         double sumSignal = 0.0;
@@ -273,20 +285,21 @@ void SciFiPlaneView::findCentroid() {
         for (size_t position = 0; position < signals.size(); ++position) {
             double signal = signals[position];
 
-            if (signal >= 0) {
+            if (signal >= 0) { // Process valid signals only (non-negative)
                 double pos = positions[position];
                 double d = depths[position];
+                // Accumulate signal, weighted position, and depth
                 // std::cout <<"pos: " <<pos <<" signal: " <<signal <<std::endl;
                 sumSignal += signal;
                 sumWeighted += signal * pos;
                 sumZ += signal * d;
             }
         }
-        if (signals.size()<1) {
+        if (signals.size()<1) { // If no signals, assign default values
             centroid = DEFAULT;
             centroid_depth = DEFAULT;
         }
-        else {
+        else { // Otherwise, calculate the centroid and depth
             centroid = sumWeighted / sumSignal;
             centroid_depth = sumZ / sumSignal;
         }
@@ -298,6 +311,8 @@ void SciFiPlaneView::findCentroid() {
     //std::cout<<centroid.x <<", " <<centroid.y <<std::endl;
     //std::cout<<centroid_depth.x <<", " <<centroid_depth.y <<std::endl;
 }
+
+// Similar analysis performed for muons (MIP), QDC was omitted as it averages to zero overall.
 
 void SciFiPlaneView::findMuon() {
     auto positionMuon = [](const std::vector<double>& positions, const std::vector<double>& depths, double& muonpos, double& muondepth) {
@@ -329,6 +344,8 @@ void SciFiPlaneView::findMuon() {
     // std::cout << muondepth.x << ", " << muondepth.y << std::endl;
 }
 
+// Retrieves the geometry positions for x and y, then prints them to the console.
+
 void SciFiPlaneView::findPosition() {
     auto positions = getGeometry();
     
@@ -345,10 +362,12 @@ void SciFiPlaneView::resetHit( bool isVertical, int index){
     if (isVertical) {
         qdc.y[index] = DEFAULT;
         hitTimestamps.y[index] = DEFAULT;
+        geom.y[index] = DEFAULT;
     }
     else {
         qdc.x[index] = DEFAULT;
         hitTimestamps.x[index] = DEFAULT;
+        geom.x[index] = DEFAULT;
     }
 }
 
@@ -447,26 +466,31 @@ const int SciFiPlaneView::getEnd() const {
     return end;
 }
 
-const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroid() const{
+// Returns the centroid (x, y) position
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroid() const {
     xy_pair<double> c{centroid.x, centroid.y};
     return c;
 }
 
-const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroidDepth() const{
+// Returns the centroid depth (x, y)
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getCentroidDepth() const {
     xy_pair<double> c{centroid_depth.x, centroid_depth.y};
     return c;
 }
 
-const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuon() const{
+// Returns the muon position (x, y) 
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuon() const {
     xy_pair<double> c{muonpos.x, muonpos.y};
     return c;
 }
 
-const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuonDepth() const{
+// Returns the muon depth (x, y) 
+const SciFiPlaneView::xy_pair<double> SciFiPlaneView::getMuonDepth() const {
     xy_pair<double> c{muondepth.x, muondepth.y};
     return c;
 }
 
+// Returns the geometry (x, y) as a pair of vectors of doubles.
 const SciFiPlaneView::xy_pair<std::vector<double>> SciFiPlaneView::getGeometry() const {
     return geom;
 }
